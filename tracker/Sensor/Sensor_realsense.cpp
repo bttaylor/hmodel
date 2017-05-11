@@ -85,7 +85,7 @@ int sensor_frame = 0;
 int tracker_frame = 0;
 
 SensorRealSense::SensorRealSense(Camera *camera, bool real_color) : Sensor(camera) {
-	if (camera->mode() != Intel)
+	if (camera->mode() != RealSense)
 		LOG(FATAL) << "!!!FATAL: RealSense needs Intel camera mode";
 	this->handfinder = new HandFinder(camera);
 	this->real_color = real_color;

@@ -8,6 +8,8 @@
 #include "ModelSemantics.h";
 #include "tracker/OpenGL/DebugRenderer/DebugRenderer.h"
 #include "tracker/Data/Camera.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 Model::Model() :outline_finder(this), serializer(this), semantics(this) {
 	centers = std::vector<glm::vec3>();

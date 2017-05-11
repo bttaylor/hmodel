@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <Eigen/Dense>
 #include <GL/glew.h> 
-#include <OpenGP/GL/EigenOpenGLSupport3.h>
+//#include <OpenGP/GL/EigenOpenGLSupport3.h>
 #include <QGLBuffer>
 #include <QGLShaderProgram>
 #include <QOpenGLVertexArrayObject>

@@ -44,7 +44,7 @@ Camera::Camera(CAMERAMODE mode, int fps):_mode(mode), _fps(fps){
             _focal_length_y = 241.42;
             _zNear = 150;
             _zFar = 600;
-        case Intel:
+		case RealSense:
            _width = 320;
            _height = 240;
            _focal_length_x = 224.502;

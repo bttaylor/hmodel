@@ -3,7 +3,7 @@
 #include <QSize>
 
 /// The running modes for cameras
-enum CAMERAMODE{ INVALID=-1, QVGA, VGA, Tompson, Chen, Tang, Intel};
+enum CAMERAMODE{ INVALID = -1, QVGA, VGA, Tompson, Chen, Tang, RealSense };
 
 class Camera{
     typedef Eigen::Matrix<float,3,3> Matrix33f;
