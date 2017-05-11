@@ -6,6 +6,9 @@
 
 #include "tracker/Tracker.h"
 #include "tracker/GLWidget.h"
+
+#include <myo/myo.hpp>
+#include "DataCollector.h"
 //#include <vld.h>
 
 int main(int argc, char* argv[]) {
@@ -18,9 +21,20 @@ int main(int argc, char* argv[]) {
 	bool playback = false;
 	int user_name = 0;
 
-	std::string sequence_path = "E:/Data/sensor-sequences/";
-	std::string data_path = "C:/Developer/hmodel-cpp-public/data/";
-	std::string sequence_name = "teaser";
+	myo::Hub hub("taylor.com.text");
+	myo::Myo* myo = hub.waitForMyo(10000);
+	DataCollector collector = DataCollector();
+
+	if (!myo){
+		std::cout << "Unable to find a Myo!";
+	}
+
+	myo->setStreamEmg(myo::Myo::streamEmgEnabled);
+	hub.addListener(&collector);
+
+	std::string sequence_path = "C:/Projects/Data/";
+	std::string data_path = "C:/Projects/clean0426/hmodel-master/data/";
+	std::string sequence_name = "Participant33";
 
 	Q_INIT_RESOURCE(shaders);
 	QApplication app(argc, argv);
@@ -62,7 +76,7 @@ int main(int argc, char* argv[]) {
 	worker.bind_glwidget(&glwidget);
 	glwidget.show();
 
-	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color);
+	Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
 	tracker.sensor = &sensor;
 	tracker.datastream = &datastream;
 	tracker.solutions = &solutions;

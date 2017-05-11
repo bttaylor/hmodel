@@ -19,6 +19,7 @@
 #include <ctime>
 #include <math.h>
 #include <iomanip>
+#include <myo/myo.hpp>
 
 class Tracker : public QTimer {
 public:
@@ -27,6 +28,7 @@ public:
 	DataStream* datastream;
 	SolutionStream* solutions;
 	Worker*const worker = NULL;
+	myo::Hub*const hub = NULL;
 
 	OnlinePeformanceMetrics online_performance_metrics;
 
@@ -44,7 +46,7 @@ public:
 
 
 public:
-	Tracker(Worker*worker, double FPS, std::string data_path, bool real_color) : worker(worker) {
+	Tracker(Worker*worker, myo::Hub* hub, double FPS, std::string data_path, bool real_color) : worker(worker), hub(hub) {
 		setSingleShot(false);
 		setInterval((1.0 / FPS)*1000.0);
 		this->data_path = data_path;
@@ -107,6 +109,8 @@ public:
 		//TICTOC_BLOCK(fetching_time, "Sensor fetch")
 		{
 			if (mode == LIVE) {
+
+				hub->run(1000 / 100);
 				//bool success = sensor->fetch_streams(worker->current_frame);		
 				//worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
 
