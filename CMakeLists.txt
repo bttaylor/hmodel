@@ -42,4 +42,4 @@ add_subdirectory(tracker)
 add_subdirectory(apps/hmodel_atb)
 #add_subdirectory(apps/hmodel_qt)
 #add_subdirectory(apps/synthgen) #<<< NOT READY
-#add_subdirectory(apps/colopick) #<<< NOT READY
+#add_subdirectory(apps/colorpick) #<<< NOT READY

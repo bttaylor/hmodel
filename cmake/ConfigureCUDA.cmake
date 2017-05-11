@@ -4,7 +4,8 @@ add_definitions(-DWITH_CUDA)
 # Anastasia: what is this for?
 if(WIN32)
    # set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v6.5")
-   set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.0")
+   set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v8.0")
+   set(CUDA_SDK_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v8.0")
 endif()
 
 #--- Import CUDA/CUBLAS
@@ -35,6 +36,8 @@ elseif(HOSTNAME STREQUAL "waluigi") #--- Matthias/Linux
 elseif(HOSTNAME STREQUAL "nastylinux") #--- Anastasia
     set(CUDA_NVCC_FLAGS "-gencode arch=compute_30,code=sm_30")# GTX660 Ti
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -w -Xcompiler -fPIC -D__CUDACC__" )
+elseif(HOSTNAME STREQUAL "DESKTOP-GBP8E7C") #--- Brandon/ Windows
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode arch=compute_61,code=sm_61") # GTX1080
 
 #--- Generic
 else()
