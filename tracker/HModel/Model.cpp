@@ -438,7 +438,7 @@ void Model::write_model(std::string data_path, int frame_number) {
 void Model::load_model_from_file() {
 	blocks.clear();
 
-	std::string model_folder_path = "models/anastasia/";
+	std::string model_folder_path = "models/anastasia2/";
 	read_float_matrix(data_path + model_folder_path, "C", centers);
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
@@ -451,7 +451,7 @@ void Model::load_model_from_file() {
 	for (int i = 0; i < N; ++i) {
 		phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
 		for (size_t u = 0; u < d + 1; u++) {
-			for (size_t v = 0; v < d + 1; v++) {
+			for (size_t v = 0; v < d + 1; v++) {		
 				fscanf(fp, "%f", &phalanges[i].init_local(v, u));
 			}
 		}
@@ -551,7 +551,7 @@ void Model::move(const std::vector<float> & theta) {
 			else if (dofs[i].axis == Vec3f(0, 1, 0))
 				rotateY[i] = theta[i];
 			else if (dofs[i].axis == Vec3f(0, 0, 1))
-				rotateZ[i] = theta[i];
+				rotateZ[i] = theta[i];  
 			else
 				cout << "wrong axis" << endl;
 
@@ -562,7 +562,7 @@ void Model::move(const std::vector<float> & theta) {
 
 	//transform joints separately
 	transform_joints(globals); // pose	
-	transform_joints(rotateX); // flexion
+	transform_joints(rotateX); // flexion   
 	transform_joints(rotateZ); // abduction
 	transform_joints(rotateY); // twist
 }

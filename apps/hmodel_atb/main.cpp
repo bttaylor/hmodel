@@ -21,16 +21,16 @@ int main(int argc, char* argv[]) {
 	bool playback = false;
 	int user_name = 0;
 
-	myo::Hub hub("taylor.com.text");
-	myo::Myo* myo = hub.waitForMyo(10000);
-	DataCollector collector = DataCollector();
+	//myo::Hub hub("taylor.com.text");
+	//myo::Myo* myo = hub.waitForMyo(10000);
+	//DataCollector collector = DataCollector();
 
-	if (!myo){
-		std::cout << "Unable to find a Myo!";
-	}
+	//if (!myo){
+	//	std::cout << "Unable to find a Myo!";
+	//}
 
-	myo->setStreamEmg(myo::Myo::streamEmgEnabled);
-	hub.addListener(&collector);
+	//myo->setStreamEmg(myo::Myo::streamEmgEnabled);
+	//hub.addListener(&collector);
 
 	std::string sequence_path = "C:/Projects/Data/";
 	std::string data_path = "C:/Projects/clean0426/hmodel-master/data/";
@@ -76,7 +76,8 @@ int main(int argc, char* argv[]) {
 	worker.bind_glwidget(&glwidget);
 	glwidget.show();
 
-	Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
+	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color);
+	//Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
 	tracker.sensor = &sensor;
 	tracker.datastream = &datastream;
 	tracker.solutions = &solutions;

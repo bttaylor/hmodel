@@ -36,6 +36,19 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	model->update_centers();
 	model->compute_outline();
 
+	//Brandon
+	Bayes_mu = std::vector<std::vector<float>>();
+	Bayes_sig = std::vector<std::vector<float>>();
+	std::string path = "C:/Projects/ASLRecog/";
+	std::string f1 = "mu_params.txt";
+	std::string f2 = "sig_params.txt";
+	std::cout << "gonna read something" << std::endl;
+	read_bayes_vectors(path, f1, Bayes_mu);
+	read_bayes_vectors(path, f2, Bayes_sig);
+	read_class_names();
+	//read_bayes_vectors("C:/Projects/ASLRecog/", "mu_params.txt", Bayes_mu);
+	//read_bayes_vectors("C:/Projects/ASLRecog/", "sig_params.txt", Bayes_sig);
+
 	if (user_name == 0) model->manually_adjust_initial_transformations();
 }
 
@@ -117,4 +130,68 @@ void Worker::track(int iter) {
 	model->update_centers();
 	model->compute_outline();
 	E_temporal.update(current_frame.id, _thetas);
+}
+
+void Worker::read_bayes_vectors(std::string data_path, std::string name, std::vector<std::vector<float>> & input) {
+	//std::cout << "opening: " << data_path << name << std::endl;
+	FILE *fp = fopen((data_path + name ).c_str(), "r");
+	int N = 41;
+
+	//fscanf(fp, "%d", &N);
+	for (int i = 0; i < N; ++i) {
+		std::vector<float> theta = std::vector<float>();
+		for (int j = 0; j < 20; ++j){
+			float a;
+			fscanf(fp, "%f", &a);
+			theta.push_back(a);
+		}
+		input.push_back(theta);
+		//std::cout << "one value is: " << theta[3] << std::endl;
+	}
+	fclose(fp);
+	std::cout << "Reading some vecotr for the classifier" << std::endl;
+}
+
+void Worker::read_class_names(){
+	std::string data_path = "C:/Projects/ASLRecog/classes.txt";
+	std::ifstream fp("C:/Projects/ASLRecog/classes.txt");
+	//FILE *fp = fopen((data_path).c_str(), "r");
+	int N = 41;
+
+	//fscanf(fp, "%d", &N);
+	for (int i = 0; i < N; ++i) {
+		std::string name;
+		fp >> name;
+		//fscanf(fp, "%s", &name);
+		class_names.push_back(name);
+		std::cout << "one class is: " << name << std::endl;
+	}
+	fp.close();
+	//	fclose(fp);
+	std::cout << "Reading some vecotr for the classifier" << std::endl;
+}
+
+int Worker::classify(){
+//void calc_max_likelihood(std::vector<float> theta){
+	int N = 41;
+	int class_max = 0;
+	float max_likelihood = -999999;
+	float likelihood = 0;
+	for (int i = 0; i < N; ++i){
+		likelihood = 0;
+		for (int j = 0; j < 20; ++j){			
+			likelihood += -.5*log(2 * M_PI * Bayes_sig[i][j]) - (model->theta[j+9] - Bayes_mu[i][j])*(model->theta[j+9] - Bayes_mu[i][j]) / (2 * Bayes_sig[i][j]);
+		}
+		if (i == 0)
+			max_likelihood = likelihood;
+		if (likelihood > max_likelihood){			
+			max_likelihood = likelihood;
+			class_max = i;
+		}
+		//std::cout << "Class " << i << " likelihood: " << likelihood << std::endl;
+	}
+	//std::cout << "Most likely Class: " << class_names[class_max] << std::endl;
+
+	return class_max;
+
 }

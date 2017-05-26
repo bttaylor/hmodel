@@ -158,6 +158,10 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		this->close();
 	}
 	break;
+	case Qt::Key_C: {
+		int hs_class = worker->classify();
+		cout << "Most likely class: " << worker->class_names[hs_class] << std::endl;
+	}
 	case Qt::Key_S: {
 		cout << "set up path for saving images" << std::endl;
 		//datastream->save_as_images(data_path);

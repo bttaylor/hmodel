@@ -971,7 +971,7 @@ void FindFingers::find_thumb(const Matrix_MxN &depth) {
 
     Scalar a = x(0) * y(1) - x(1) * y(0);
 
-    if (a < 0) {
+    if (a < 0) {		
         hand_side = 0;
         //cout << "BACK SIDE" << endl;
     }

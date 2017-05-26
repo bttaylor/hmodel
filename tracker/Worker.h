@@ -1,4 +1,8 @@
 #pragma once
+#include <math.h>
+#include <vector>
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include "util/gl_wrapper.h"
 #include "tracker/ForwardDeclarations.h"
 #include "tracker/Types.h"
@@ -24,6 +28,11 @@ public:
 		int termination_max_rigid_iters = 1;
 	} _settings;
 	Settings*const settings = &_settings;
+
+	//Brandon
+	std::vector<std::vector<float>> Bayes_mu;
+	std::vector<std::vector<float>> Bayes_sig;
+	std::vector<std::string> class_names;
 
 public:
 	QGLWidget* glarea = NULL;
@@ -69,4 +78,8 @@ public:
 public:
 	void track(int iter);
 	bool track_till_convergence();
+
+	int classify();
+	void read_bayes_vectors(std::string , std::string , std::vector<std::vector<float>>&);
+	void read_class_names();
 };
