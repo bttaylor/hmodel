@@ -142,10 +142,16 @@ public:
 	Cylinders *cylinders;
 	Eigen::Matrix4f projection;
 	Model * model;
+	//Model * model2;
 	SHADERMODE mode;
 	bool real_color;
 	std::string data_path;
 	
+	//ConvolutionRenderer(Model *model, Model *model2, bool real_color, std::string data_path);
+
+	//ConvolutionRenderer(Model *model, Model *model2, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& view_projection, std::string data_path);
+
+
 	ConvolutionRenderer(Model *model, bool real_color, std::string data_path);
 
 	ConvolutionRenderer(Model *model, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& view_projection, std::string data_path);
@@ -154,7 +160,7 @@ public:
 
 	void setup_canvas();
 
-	void pass_model_to_shader(bool fingers_only);
+	void pass_model_to_shader(bool fingers_only, Model *model);
 
 	void setup_texture(cv::Mat & color_frame);
 

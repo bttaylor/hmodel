@@ -307,7 +307,7 @@ int Model::compute_rendered_indicator_helper(int row, int col, Vector3 p, int bl
 }
 
 void Model::compute_rendered_indicator(const cv::Mat & sensor_silhouette, Camera * camera) {
-	bool display = false;
+	bool display = true;
 	cv::Mat image;
 	if (display) {
 		cv::Scalar color = cv::Scalar(100, 0, 230);
@@ -438,23 +438,53 @@ void Model::write_model(std::string data_path, int frame_number) {
 void Model::load_model_from_file() {
 	blocks.clear();
 
-	std::string model_folder_path = "models/anastasia2/";
+	std::string model_folder_path = "models/anastasia/";
+	//read_float_matrix("C:/Projects/clean0426/hmodel-master/data/models/anastasia/","C",centers);
 	read_float_matrix(data_path + model_folder_path, "C", centers);
+	/*for (int i = 0; i < centers.size(); ++i){
+		//std::cout << "center " << i << " x: " << centers[i].x << " y: " << centers[i].y << std::endl;
+		if (i < 4){
+			centers[i].x += -20;
+		}
+		if (i == 28)
+			centers[i].x += -20;
+	}*/
+	//centers[0].x = 45.0;
+	//centers[0].y = 200;
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
 
 	// Read initial transformations
 
+	//FILE *fp = fopen("C:/Projects/clean0426/hmodel-master/data/models/anastasia2/I.txt", "r");
 	FILE *fp = fopen((data_path + model_folder_path + "I.txt").c_str(), "r");
 	int N;
 	fscanf(fp, "%d", &N);
 	for (int i = 0; i < N; ++i) {
 		phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
 		for (size_t u = 0; u < d + 1; u++) {
-			for (size_t v = 0; v < d + 1; v++) {		
+			for (size_t v = 0; v < d + 1; v++) {
 				fscanf(fp, "%f", &phalanges[i].init_local(v, u));
 			}
 		}
+		/*
+		if (i == 5){
+			//phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+			phalanges[i].init_local(0, 0) = .7071;
+			phalanges[i].init_local(0, 1) = .7071;
+			phalanges[i].init_local(1, 1) = .7071;
+			phalanges[i].init_local(1, 0) = -.7071;
+		}
+		if (i == 6){
+			phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+			phalanges[i].init_local(0, 0) = .7071;
+			phalanges[i].init_local(0, 1) = -.7071;
+			phalanges[i].init_local(1, 1) = .7071;
+			phalanges[i].init_local(1, 0) = .7071;
+			phalanges[i].init_local(2, 2) = 1;
+			phalanges[i].init_local(3, 3) = 1;
+			phalanges[i].init_local(1, 3) = 19;  //length?
+		}*/
 	}
 	fclose(fp);
 
@@ -524,6 +554,10 @@ void Model::transform_joints(const std::vector<float> & theta) {
 			translate(phalanges[dofs[i].phalange_id], dofs[i].axis * theta[i]);
 			break;
 		case ROTATION_AXIS:
+			//std::cout << i << " axis: (" << dofs[i].axis.x() << "," << dofs[i].axis.y() << "," << dofs[i].axis.z() << ") angle: " << theta[i] << std::endl;
+			//Transform3f tf = Transform3f(Eigen::AngleAxisf(theta[i], dofs[i].axis)); // .matrix()
+			//tf.matrix
+			//Mat4f temp = phalanges[dofs[i].phalange_id].local * Transform3f(Eigen::AngleAxisf(theta[i], dofs[i].axis)).matrix();
 			rotate(phalanges[dofs[i].phalange_id], dofs[i].axis, theta[i]);
 			break;
 		}
@@ -675,6 +709,7 @@ Mat3f Model::build_rotation_matrix(Vec3f euler_angles) {
 }
 
 void Model::manually_adjust_initial_transformations() {
+	std::cout << "Manually Adjusting Initial Transformations()" << std::endl;
 	Mat3f R;
 	// thumb
 	R = build_rotation_matrix(Vec3f(-1.45, 0.6, -1.95));

@@ -10,6 +10,7 @@ private:
     TrivialDetector*const trivial_detector=NULL;
 public:
     HandFinder(Camera * camera);
+	HandFinder(Camera * camera, int color);
 	~HandFinder() {
 		delete[] sensor_indicator;
 	}
@@ -23,11 +24,13 @@ public:
         float wband_size = 30;
         cv::Scalar hsv_min = cv::Scalar( 94, 111,  37); ///< potentially read from file
         cv::Scalar hsv_max = cv::Scalar(120, 255, 255); ///< potentially read from file
+		int color; //1 == yellow, 2 == blue
     } _settings;
     Settings*const settings=&_settings;
 /// @}
 
 public:
+	std::string name;
     bool _has_useful_data = false;
     bool _wristband_found;
     Vector3 _wband_center;

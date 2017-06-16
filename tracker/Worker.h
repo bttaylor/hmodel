@@ -33,6 +33,8 @@ public:
 	std::vector<std::vector<float>> Bayes_mu;
 	std::vector<std::vector<float>> Bayes_sig;
 	std::vector<std::string> class_names;
+	bool lock_tracking;
+	void toggle_tracking_lock();
 
 public:
 	QGLWidget* glarea = NULL;
@@ -49,6 +51,7 @@ public:
 
 	Camera* camera = NULL;
 	Model * model;
+	//Model * model2;
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -62,8 +65,17 @@ public:
 	energy::JointLimits E_limits;
 	energy::Collision E_collision;
 	energy::PoseSpace E_pose;
-
+	/*
+	energy::Fitting E_fitting2;
+	energy::Temporal E_temporal2;
+	energy::Damping E_damping2;
+	energy::JointLimits E_limits2;
+	energy::Collision E_collision2;
+	energy::PoseSpace E_pose2;
+	*/
 	HandFinder* handfinder = NULL;
+	//2nd hand mod
+	HandFinder* R_Handfinder = NULL;
 	TrivialDetector* trivial_detector = NULL;
 	OffscreenRenderer offscreen_renderer;
 	OffscreenRenderer rastorizer;
@@ -76,8 +88,10 @@ public:
 	void cleanup_graphic_resources();
 
 public:
-	void track(int iter);
+	//void track(int iter, Model* model, int model_num);
+	void track(int iter);// , Model* model, int model_num);
 	bool track_till_convergence();
+	//bool track_till_convergence(int);
 
 	int classify();
 	void read_bayes_vectors(std::string , std::string , std::vector<std::vector<float>>&);

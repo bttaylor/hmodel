@@ -20,6 +20,7 @@ QianDetection::QianDetection(Worker *worker) : worker(worker) {
     find_fingers = new FindFingers(worker, detection);
 
     tw_settings->tw_add(settings->display, "Detect. SHOW?","group=Tracker");
+	//settings->display = true;
 }
 
 QianDetection::~QianDetection(){

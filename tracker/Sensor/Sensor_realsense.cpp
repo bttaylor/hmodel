@@ -87,7 +87,14 @@ int tracker_frame = 0;
 SensorRealSense::SensorRealSense(Camera *camera, bool real_color) : Sensor(camera) {
 	if (camera->mode() != RealSense)
 		LOG(FATAL) << "!!!FATAL: RealSense needs Intel camera mode";
-	this->handfinder = new HandFinder(camera);
+	this->handfinder = new HandFinder(camera,1);
+	handfinder->name = "Left";
+	this->handfinder->_settings.show_wband = false; 
+	this->handfinder->_settings.show_hand = false;
+	this->R_Handfinder = new HandFinder(camera,2);
+	R_Handfinder->name = "Right";
+	R_Handfinder->_settings.show_wband = false;
+	R_Handfinder->_settings.show_hand = false;
 	this->real_color = real_color;
 }
 
@@ -131,6 +138,7 @@ SensorRealSense::~SensorRealSense() {
 	std::cout << "~SensorRealSense()" << std::endl;
 	if (!initialized) return;
 	delete handfinder;
+	delete R_Handfinder;
 	// TODO: stop sensor 
 
 }
@@ -341,6 +349,7 @@ bool SensorRealSense::run() {
 
 		sense_manager->ReleaseFrame();
 
+		//std::cout << "calling Sensor_realsense.handfinder->binary_classification()" << std::endl;
 		handfinder->binary_classification(depth_array[BACK_BUFFER], color_array[BACK_BUFFER]);
 		num_sensor_points_array[BACK_BUFFER] = 0;
 		int count = 0;
@@ -354,6 +363,10 @@ bool SensorRealSense::run() {
 				count++;
 			}
 		}
+
+		//2nd hand mod
+		this->R_Handfinder->binary_classification(depth_array[BACK_BUFFER], color_array[BACK_BUFFER]);
+		//end
 
 		// Lock the mutex and swap the buffers
 		{

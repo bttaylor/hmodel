@@ -826,7 +826,7 @@ void ModelSemantics::setup_phalanges() {
 	model->phalanges[0].radius2 = 0;
 	model->phalanges[0].segment_id = 3;
 	model->phalanges[0].kinematic_chain = { 0, 1, 2, 3, 4, 5 };
-	model->phalanges[0].children_ids = { 1, 4, 7, 10, 13 };
+	model->phalanges[0].children_ids = { 1, 4, 7, 10, 13 };  
 
 	model->phalanges[1].name = "HandThumb1";
 	model->phalanges_name_to_id_map["HandThumb1"] = 1;

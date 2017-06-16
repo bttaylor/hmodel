@@ -14,10 +14,13 @@
 
 #include "tracker/TwSettings.h"
 
-HandFinder::HandFinder(Camera *camera) : camera(camera){
+HandFinder::HandFinder(Camera *camera): HandFinder(camera,1) {
+}
+
+HandFinder::HandFinder(Camera *camera, int _color) : camera(camera){
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
-
+	this->_settings.color = _color;
     tw_settings->tw_add(settings->show_hand, "show_hand", "group=HandFinder");
     tw_settings->tw_add(settings->show_wband, "show_wband", "group=HandFinder");
     tw_settings->tw_add(settings->wband_size, "wband_size", "group=HandFinder");
@@ -29,7 +32,16 @@ HandFinder::HandFinder(Camera *camera) : camera(camera){
      TwAddVarRW(tw_settings->anttweakbar(), "rgb_max", TW_TYPE_COLOR3F,  &_settings.hsv_max.data, "group=HandFinder");
 #endif
 
-    std::string path = local_file_path("wristband.txt",true/*exit*/);
+	 std::string path;
+	 if (_settings.color == 1){
+		 path = local_file_path("yellow_wristband.txt", true/*exit*/);
+	 }
+	 else if (_settings.color == 2){
+		 path = local_file_path("blue_wristband.txt", true/*exit*/);
+	 }
+	 else{
+		 path = local_file_path("wristband.txt", true/*exit*/);
+	 }
     if(!path.empty()){
         std::cout << "Reading Wristband Colors from: " << path << std::endl;
         ifstream myfile(path);
@@ -116,11 +128,11 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
     }
 
 	if (_settings.show_wband) {
-		cv::imshow("show_wband", mask_wristband);
+		cv::imshow(name + "show_wband", mask_wristband);
 		cv::waitKey(1);
 	}		
     else
-        cv::destroyWindow("show_wband");
+        cv::destroyWindow(name + "show_wband");
 
     // TIMED_BLOCK(timer,"Worker_classify::(crop at wrist depth)")
     {
@@ -213,9 +225,9 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
     }
 
     if(_settings.show_hand){
-        cv::imshow("show_hand", sensor_silhouette);
+        cv::imshow(name + "show_hand", sensor_silhouette);
     } else {
-        cv::destroyWindow("show_hand");
+        cv::destroyWindow(name + "show_hand");
     }
 }
 

@@ -47,6 +47,7 @@ public:
 	int first_frame_lag = 0;
 
 	bool tracking_failed = true;
+	bool tracking_failed2 = true;
 	bool initialization_enabled = true;
 	bool tracking_enabled = true;
 	bool verbose = false;
@@ -256,8 +257,11 @@ public:
 				//hub->run(1000 / 100);
 				//bool success = sensor->fetch_streams(worker->current_frame);		
 				//worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
-
+				//std::cout << "calling sensor->concurrent_fetch_streams" << std::endl;
 				bool success = sensor->concurrent_fetch_streams(worker->current_frame, *worker->handfinder, worker->model->real_color);
+				//if (success){  //Brandon 2 hand mod
+				//	worker->model2->real_color = worker->model->real_color;
+				//}
 
 				/*if (current_frame == 1) {
 					Vector3 translation = worker->trivial_detector->exec(worker->current_frame, worker->handfinder->sensor_silhouette);
@@ -314,6 +318,7 @@ public:
 		//TICTOC_BLOCK(tracking_time, "Tracking")
 		{
 			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+			//tracking_failed2 = tracking_enabled ? worker->track_till_convergence(2) : true;
 		}
 
 		float tracking = std::clock() - start; if (verbose) cout << "tracking = " << tracking - sensor << endl;
@@ -328,7 +333,7 @@ public:
 		}
 		//TICTOC_BLOCK(rendering_time, "Rendering") 
 		{
-			worker->offscreen_renderer.render_offscreen(true, false);
+			worker->offscreen_renderer.render_offscreen(true, true);  //was true, false
 			worker->updateGL();
 			//if (mode == BENCHMARK && real_color) display_color_and_depth_input();		
 			if (real_color) display_color_and_depth_input();

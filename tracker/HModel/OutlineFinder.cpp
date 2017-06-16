@@ -509,7 +509,6 @@ struct OutlineTraverser {
 				break;
 			}
 
-
 			outline[count].start = points[k].value;
 			// circle
 			if (type == 0) {

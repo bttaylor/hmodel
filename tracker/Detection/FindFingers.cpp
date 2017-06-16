@@ -24,8 +24,12 @@
 
 FindFingers::FindFingers(Worker *worker, DetectionStream *detection) : worker(worker), detection(detection), camera(worker->camera) {}
 
-inline bool float_comparator(std::pair<Scalar, size_t> a, std::pair<Scalar, size_t> b) {
+inline bool float_comparator(std::pair<Scalar, size_t> a, std::pair<Scalar, size_t> b) {	
     return a.first < b.first;
+}
+
+inline bool RH_float_comparator(std::pair<Scalar, size_t> a, std::pair<Scalar, size_t> b) {
+	return b.first < a.first;
 }
 
 void FindFingers::eigen_imshow(Matrix_MxN eigen_image, string window_name) {
@@ -913,8 +917,17 @@ void FindFingers::find_permutations() {
         radial.push_back(std::pair<Scalar, size_t>(angle, i));
         linear.push_back(std::pair<Scalar, size_t>(root(1), i));
     }
-    std::sort(radial.begin(), radial.end(), float_comparator);
-    std::sort(linear.begin(), linear.end(), float_comparator);
+	std::sort(radial.begin(), radial.end(), float_comparator);
+	std::sort(linear.begin(), linear.end(), float_comparator);
+
+	//cout << "original radial ordering: " << endl;
+	//for (size_t i = 0; i < radial.size(); i++) { cout << radial[i].second << " "; } cout << endl;
+	//std::sort(radial.begin(), radial.end(), RH_float_comparator);
+	//cout << "Right hand radial orderig" << endl;
+    //for (size_t i = 0; i < radial.size(); i++) { cout << radial[i].second << " "; } cout << endl;
+	//std::sort(radial.begin(), radial.end(), float_comparator);
+    //std::sort(linear.begin(), linear.end(), float_comparator);
+	//std::sort(linear.begin(), linear.end(), RH_float_comparator);
 
     radial_order.clear();
     linear_order.clear();
@@ -971,13 +984,13 @@ void FindFingers::find_thumb(const Matrix_MxN &depth) {
 
     Scalar a = x(0) * y(1) - x(1) * y(0);
 
-    if (a < 0) {		
+    if (a < 0) {		//Brandon reversed this was a < 0
         hand_side = 0;
-        //cout << "BACK SIDE" << endl;
+        cout << "BACK SIDE" << endl;
     }
     else {
         hand_side = 1;
-        //cout << "FONT SIDE" << endl;
+        cout << "FONT SIDE" << endl;
     }
 }
 

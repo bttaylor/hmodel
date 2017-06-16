@@ -197,6 +197,17 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		worker->model->resize_model(1.0, 1.0, 0.95);
 	}
 	break;
+	case Qt::Key_9: {
+		if (!worker->lock_tracking){
+			cout << "Stopping the tracking" << std::endl;
+		}
+		else{
+			cout << "Restarting tracking" << std::endl;
+		}
+
+		worker->toggle_tracking_lock();
+	}
+	break;
 	}
 }
 

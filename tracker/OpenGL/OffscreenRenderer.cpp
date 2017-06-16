@@ -6,11 +6,26 @@
 #include "tracker/Data/Camera.h"
 #include "tracker/OpenGL/ConvolutionRenderer/ConvolutionRenderer.h"
 #include "tracker/OpenGL/CustomFrameBuffer.h"
+/*
+void OffscreenRenderer::init(Camera* camera, Model * model, Model * model2, std::string data_path, bool render_block_id) {
+	this->camera = camera;
+	this->model = model;
+	this->model2 = model2;
 
+	if (render_block_id) {
+		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
+		convolution_renderer = new ConvolutionRenderer(model, model2, ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);
+	}
+	else { // render_depth
+		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
+		convolution_renderer = new ConvolutionRenderer(model, model2, ConvolutionRenderer::RASTORIZER, camera->view_projection_matrix(), data_path);
+	}
+}
+*/
 void OffscreenRenderer::init(Camera* camera, Model * model, std::string data_path, bool render_block_id) {
 	this->camera = camera;
 	this->model = model;
-	
+
 	if (render_block_id) {
 		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
 		convolution_renderer = new ConvolutionRenderer(model, ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);

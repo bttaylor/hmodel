@@ -14,7 +14,8 @@ protected:
     const Camera * camera;
 public:
 	HandFinder * handfinder;
-
+	//2nd hand mod
+	HandFinder * R_Handfinder;
 
 public:   
     Sensor(Camera* camera): initialized(false), camera(camera) {}
