@@ -13,6 +13,7 @@
 #include "tracker/Data/TextureDepth16UC1.h"
 #include "tracker/TwSettings.h"
 #include "tracker/HModel/Model.h"
+#include "tracker/OpenGL/ConvolutionRenderer/ConvolutionRenderer.h"
 
 #include "tracker/Energy/Fitting/OnlinePerformanceMetrics.h"
 
@@ -35,6 +36,8 @@ public:
 	std::string data_path;
 	bool real_color;
 
+	Worker* worker2 = NULL;
+
 public:
 	float current_fps = 0;
 	int first_frame_lag = 0;
@@ -44,6 +47,10 @@ public:
 	bool tracking_enabled = true;
 	bool verbose = false;
 
+	//Brandon Joint Test Mods
+	int joint_num = -1;
+	bool joint_min = true;
+	bool myoEnable = true;
 
 public:
 	Tracker(Worker*worker, myo::Hub* hub, double FPS, std::string data_path, bool real_color) : worker(worker), hub(hub) {
@@ -97,7 +104,7 @@ public:
 
 		static int frame_offset = 0;
 		static int current_frame = 0;
-
+		
 		if (mode == PLAYBACK) {
 			playback(); return;
 		}
@@ -110,7 +117,8 @@ public:
 		{
 			if (mode == LIVE) {
 
-				hub->run(1000 / 100);
+				if(myoEnable)
+					hub->run(1000 / 100);
 				//bool success = sensor->fetch_streams(worker->current_frame);		
 				//worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
 
@@ -127,12 +135,17 @@ public:
 				current_frame++;
 			}
 			if (mode == BENCHMARK) {
+				if (current_frame > 70) current_frame = 70;  //Prevent crash by keeping the last frame indefinitely
 				load_recorded_frame(current_frame);
 				current_frame += speedup;
 				//current_frame += 4;
-				worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
+				worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color,current_frame);
+				if(worker->handedness == both_hands)
+					worker->handfinder2->binary_classification(worker->current_frame.depth, worker->current_frame.color, current_frame);
+				//if(!(worker->model->silhouette_texture.empty()))
+				//	cv::imshow("silText1", worker->model->silhouette_texture);
 
-				//cv::imshow("sensor_silhouette", worker->handfinder->sensor_silhouette); cv::waitKey(3);
+				
 				worker->handfinder->num_sensor_points = 0; int count = 0;
 				for (int row = 0; row < worker->handfinder->sensor_silhouette.rows; ++row) {
 					for (int col = 0; col < worker->handfinder->sensor_silhouette.cols; ++col) {
@@ -143,15 +156,57 @@ public:
 						}
 					}
 				}
+				if (worker->handedness == both_hands) {
+					worker->handfinder2->num_sensor_points = 0;
+					count = 0;
+					for (int row = 0; row < worker->handfinder2->sensor_silhouette.rows; ++row) {
+						for (int col = 0; col < worker->handfinder2->sensor_silhouette.cols; ++col) {
+							if (worker->handfinder2->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+							if (count % 2 == 0) {
+								worker->handfinder2->sensor_indicator[worker->handfinder2->num_sensor_points] = row * worker->camera->width() + col;
+								worker->handfinder2->num_sensor_points++;
+							}
+						}
+					}
+				}
+				if (worker2 != NULL) {
+					worker2->handfinder->num_sensor_points = 0;
+					count = 0;
+					for (int row = 0; row < worker2->handfinder->sensor_silhouette.rows; ++row) {
+						for (int col = 0; col < worker2->handfinder->sensor_silhouette.cols; ++col) {
+							if (worker2->handfinder->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+							if (count % 2 == 0) {
+								worker2->handfinder->sensor_indicator[worker2->handfinder->num_sensor_points] = row * worker2->camera->width() + col;
+								worker2->handfinder2->num_sensor_points++;
+							}
+						}
+					}
+				}
+
 
 				if (current_frame == 1) {
-					Vector3 translation = worker->trivial_detector->exec(worker->current_frame, worker->handfinder->sensor_silhouette);
+					Vector3 translation = worker->trivial_detector->exec(worker->current_frame, worker->handfinder->sensor_silhouette);					
 					std::vector<float> thetas = worker->model->get_theta(); thetas[9] = 0; thetas[10] = 0;
 					thetas[0] += translation[0]; thetas[1] += translation[1]; thetas[2] += translation[2];
 					worker->model->move(thetas);
 					worker->model->update_centers();
 					worker->model->compute_outline();
+
+					if (worker->handedness == both_hands) {
+						thetas = worker->model2->get_theta();
+						worker->model2->move(thetas);
+						worker->model2->update_centers();
+						worker->model2->compute_outline();
+					}
+
+					if (worker2 != NULL) {
+						thetas = worker2->model->get_theta();
+						worker2->model->move(thetas);
+						worker2->model->update_centers();
+						worker2->model->compute_outline();
+					}
 				}
+
 
 				if (!worker->current_frame.depth.data || !worker->current_frame.color.data) return;
 			}
@@ -170,7 +225,79 @@ public:
 
 		//TICTOC_BLOCK(tracking_time, "Tracking")
 		{
-			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+
+			if (false) {
+				//Set joints as I please.
+				std::vector<float> thetas = std::vector<float>(num_thetas, 0);
+				thetas[1] = -70;
+				thetas[2] = 500;
+				if (worker->joint_number > -1) {
+					if (worker->joint_min)
+						thetas[worker->joint_number] = worker->model->dofs[worker->joint_number].min;
+					else
+						thetas[worker->joint_number] = worker->model->dofs[worker->joint_number].max;
+				}
+				worker->model->move(thetas);
+				worker->model->update_centers();
+				worker->model->compute_outline();
+			}
+			else {
+
+				if (worker->handedness == both_hands) {
+					cout << "both hands in tracker.h line 252" << endl;
+					worker->track_till_convergence(2);
+				}
+				
+				tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+				//test
+				//std::vector<float> thetas = worker->model->get_theta();
+				//cout << endl << "   model1 X: " << thetas[0] << " push error: " << worker->tracking_error.push_error << " pull error: " << worker->tracking_error.pull_error << endl;
+				//cv::imshow("e_fitting", worker->E_fitting.handfinder->sensor_silhouette);
+				//cv::waitKey(1000);
+				worker->swap_hands();
+
+				worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color, current_frame);
+				worker->handfinder->num_sensor_points = 0; int count = 0;
+				for (int row = 0; row < worker->handfinder->sensor_silhouette.rows; ++row) {
+					for (int col = 0; col < worker->handfinder->sensor_silhouette.cols; ++col) {
+						if (worker->handfinder->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+						if (count % 2 == 0) {
+							worker->handfinder->sensor_indicator[worker->handfinder->num_sensor_points] = row * worker->camera->width() + col;
+							worker->handfinder->num_sensor_points++;
+						}
+					}
+				}
+				worker->track_till_convergence();
+				//thetas = worker->model->get_theta();
+				//cout << "   model2 X: " << thetas[0] << " push error: " << worker->tracking_error.push_error << " pull error: " << worker->tracking_error.pull_error << endl;
+
+				//thetas[0] -= 100;
+				//worker->model->move(thetas);
+				//worker->model->update_centers();
+				//worker->model->compute_outline();
+
+				//cv::imshow("e_fitting", worker->E_fitting.handfinder->sensor_silhouette);
+
+				//Do I need this?
+				worker->offscreen_renderer.convolution_renderer->model = worker->model;
+				worker->offscreen_renderer.model = worker->model;
+				worker->offscreen_renderer.render_offscreen(true, false);
+				worker->updateGL();
+
+				worker->swap_hands();
+
+				worker->offscreen_renderer.model = worker->model;
+				worker->offscreen_renderer.convolution_renderer->model = worker->model;
+
+				//cv::waitKey(1000);
+				
+				//end test
+				//std::vector<float> thetas = worker->model->get_theta();
+				//cout << " model1 X: " << thetas[0];
+				//thetas = worker->model2->get_theta();
+				//cout << " model2 X: " << thetas[0] << endl;
+				//std::cout << "push error: " << worker->tracking_error.push_error << " pull error: " << worker->tracking_error.pull_error << std::endl;
+			}
 		}
 
 		float tracking = std::clock() - start; if (verbose) cout << "tracking = " << tracking - sensor << endl;
@@ -179,6 +306,7 @@ public:
 			if (initialization_enabled && tracking_failed) {
 				static QianDetection detection(worker);
 				if (detection.can_reinitialize()) {
+					cout << "***************QIAN DETECTOR" << endl;
 					detection.reinitialize();
 				}
 			}
@@ -257,6 +385,7 @@ public:
 
 		// TICTOC_BLOCK(tracking_time, "Loading data") 
 		{
+			
 			load_recorded_frame(current_frame);
 			worker->current_frame.id = frame_offset;
 			worker->sensor_color_texture->load(worker->current_frame.color.data, worker->current_frame.id);
@@ -320,6 +449,52 @@ public:
 		float end = std::clock() - start;
 		if (current_frame == 1) first_frame_lag = end - frame_start;
 		else if (verbose) cout << "average = " << (std::clock() - (start + first_frame_lag)) / (current_frame - 1) * speedup << endl;
+	}
+
+	void fitModel() {
+
+
+		float averagePush = 0;
+		float averagePull = 0;
+		for (int i = 0; i < 10; ++i) {
+			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+			averagePush += worker->tracking_error.push_error;
+			averagePull += worker->tracking_error.pull_error;
+		}
+		std::cout << "push error: " << averagePush << " pull error: " << averagePull;
+
+		std::cout << "Pinky1 x: " << worker->model->phalanges[4].init_local(0, 3) << std::endl;
+		worker->model->phalanges[4].init_local(0, 3) = worker->model->phalanges[4].init_local(0, 3) + 1;
+		float Pushxp1 = 0;
+		float Pullxp1 = 0;
+		for (int i = 0; i < 10; ++i) {
+			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+			Pushxp1 += worker->tracking_error.push_error;
+			Pullxp1 += worker->tracking_error.pull_error;
+		}
+		std::cout << "X+1 push error: " << Pushxp1 << " pull error: " << Pullxp1;
+		std::cout << "Pinky1 x: " << worker->model->phalanges[4].init_local(0, 3) << std::endl;
+
+		worker->model->phalanges[4].init_local(0, 3) = worker->model->phalanges[4].init_local(0, 3) - 2;
+		float Pushxm1 = 0;
+		float Pullxm1 = 0;
+		for (int i = 0; i < 10; ++i) {
+			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+			Pushxm1 += worker->tracking_error.push_error;
+			Pullxm1 += worker->tracking_error.pull_error;
+		}
+		std::cout << "X-1 push error: " << Pushxm1 << " pull error: " << Pullxm1;
+
+		if ((Pushxp1 + Pullxp1) < (averagePull + averagePush)) {
+			if ((Pushxm1 + Pullxm1) < (averagePull + averagePush)) {
+				std::cout << "Both Ways better. ???" << std::endl;
+			}
+			worker->model->phalanges[4].init_local(0, 3) = worker->model->phalanges[4].init_local(0, 3) + 2;
+		}
+		else if ((Pushxm1 + Pullxm1) > (averagePull + averagePush)) {
+			worker->model->phalanges[4].init_local(0, 3) = worker->model->phalanges[4].init_local(0, 3) + 1;
+		}
+
 	}
 
 	void compare() {

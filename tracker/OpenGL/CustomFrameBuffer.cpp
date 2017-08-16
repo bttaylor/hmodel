@@ -36,7 +36,6 @@ void CustomFrameBuffer::unbind() {
 }
 
 void CustomFrameBuffer::init(int image_width, int image_height, bool render_block_id) {
-	std::cout << "init" << std::endl;
 	CHECK(needs_cleanup == false);
 	this->image_width = image_width;
 	this->image_height = image_height;

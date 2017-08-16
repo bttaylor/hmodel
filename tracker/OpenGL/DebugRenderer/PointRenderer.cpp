@@ -32,6 +32,8 @@ void PointRenderer::render() {
 	vao.bind();
 	program.bind();
 	glEnable(GL_PROGRAM_POINT_SIZE);
+
+	cout << "PointRenderer (GL_points,0,num_primitives): " << num_primitives << endl;
 	glDrawArrays(GL_POINTS, 0, num_primitives);
 	glDisable(GL_PROGRAM_POINT_SIZE);
 	program.release();

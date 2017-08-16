@@ -19,6 +19,10 @@ DataStream::~DataStream(){
         delete frames.at(i); 
 }
 
+void DataStream::clear_stream_buffer(){
+	frames.clear();
+}
+
 int DataStream::add_frame(const void* color_buffer, const void* depth_buffer, const void* full_color_buffer) {
     frames.push_back( new DataFrame(frames.size()) );
     DataFrame& frame = *frames.back();
@@ -36,7 +40,21 @@ int DataStream::add_frame(const void* color_buffer, const void* depth_buffer, co
 
 void DataStream::save_as_images(std::string path) {	
 
+	std::ofstream outfile;
+	std::string filepath = path + "imageTimestamps.csv";
+	outfile.open(filepath, std::ofstream::app);
+
+	char buffer[32];
 	for (size_t i = 0; i < frames.size(); i++) {
+		
+		//std::cout << frames.at(i)->timestamp << std::endl;
+		//std::to_string(frames.at(i)->timestamp.count());
+
+		//std::tm * ptm = std::localtime(&(frames.at(i)->timestamp));
+		//std::cout << "timestamp alone: " << frames.at(i)->timestamp << std::endl;
+		std::cout << "millisecond timestamp: " << std::to_string(frames.at(i)->timestamp.count()) << std::endl;
+		outfile << std::to_string(frames.at(i)->timestamp.count()) << " , " << frames.at(i)->id << std::endl;
+
 		std::ostringstream stringstream;
 		stringstream << std::setw(7) << std::setfill('0') << i;
 		std::string filename;
@@ -53,6 +71,7 @@ void DataStream::save_as_images(std::string path) {
 		cout << filename << endl;
 	}
 	
+	outfile.close();
 	/*for (size_t i = 0; i < current.rows; i++) {
 		for (size_t j = 0; j < current.cols; j++) {
 			uint16_t a = current.at<uint16_t>(i, j);
@@ -60,3 +79,5 @@ void DataStream::save_as_images(std::string path) {
 		}
 	}*/
 }
+
+

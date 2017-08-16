@@ -46,7 +46,6 @@ public:
 	myo::Vector3<float>* gyro_buffer;
 	uint64_t* gyro_time_buffer;
 
-
 	DataCollector();
 	~DataCollector();
 	
@@ -62,5 +61,6 @@ public:
 	void print();
 	void onAccelerometerData(myo::Myo* myo, uint64_t timestamp, const myo::Vector3<float>& accel);
 	void onGyroscopeData(myo::Myo* myo, uint64_t timestamp, const myo::Vector3<float>& gyro);
+	void saveMyoData(std::string filepath);
 };
 

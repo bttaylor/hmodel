@@ -46,7 +46,8 @@ Model::~Model() {
 	delete[] rendered_block_ids;
 }
 
-void Model::init(int user_name, std::string data_path) {
+void Model::init(int user_name, std::string data_path, int handedness) {
+	this->handedness = handedness;
 	model_type = HMODEL;
 	this->user_name = (UserName)user_name;
 	this->data_path = data_path;	
@@ -255,6 +256,15 @@ void Model::print_model() {
 		std::cout << "	u2: "; for (size_t j = 0; j < d; j++) std::cout << tangent_points[i].u2[j] << " "; std::cout << std::endl;
 		std::cout << "	u3: "; for (size_t j = 0; j < d; j++) std::cout << tangent_points[i].u3[j] << " "; std::cout << std::endl;
 	}
+	std::cout << "INIT LOCAL" << std::endl;
+	for (size_t i = 0; i < num_phalanges + 1; i++){
+		for (size_t j = 0; j < 4; j++){
+			for (size_t k = 0; k < 4; k++){
+				std::cout << phalanges[i].init_local(k, j) << " ";
+			}
+		}
+		std::cout << std::endl;
+	}
 }
 
 void Model::render_outline() {
@@ -438,25 +448,47 @@ void Model::write_model(std::string data_path, int frame_number) {
 void Model::load_model_from_file() {
 	blocks.clear();
 
+	//std::string model_folder_path = "models/brandon/";
 	std::string model_folder_path = "models/anastasia/";
-	read_float_matrix(data_path + model_folder_path, "C", centers);
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
 
-	// Read initial transformations
 
-	FILE *fp = fopen((data_path + model_folder_path + "I.txt").c_str(), "r");
-	int N;
-	fscanf(fp, "%d", &N);
-	for (int i = 0; i < N; ++i) {
-		phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
-		for (size_t u = 0; u < d + 1; u++) {
-			for (size_t v = 0; v < d + 1; v++) {
-				fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+	if (handedness == 1){  //1 = Right
+
+		read_float_matrix(data_path + model_folder_path, "C_Right", centers);
+		// Read initial transformations
+
+		FILE *fp = fopen((data_path + model_folder_path + "I_Right_0717.txt").c_str(), "r");
+		int N;
+		fscanf(fp, "%d", &N);
+		for (int i = 0; i < N; ++i) {
+			phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+			for (size_t u = 0; u < d + 1; u++) {
+				for (size_t v = 0; v < d + 1; v++) {
+					fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+				}
+			}
+		}		
+		fclose(fp);
+	}
+	else{
+		read_float_matrix(data_path + model_folder_path, "C", centers);
+		// Read initial transformations
+
+		FILE *fp = fopen((data_path + model_folder_path + "I.txt").c_str(), "r");
+		int N;
+		fscanf(fp, "%d", &N);
+		for (int i = 0; i < N; ++i) {
+			phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+			for (size_t u = 0; u < d + 1; u++) {
+				for (size_t v = 0; v < d + 1; v++) {
+					fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+				}
 			}
 		}
+		fclose(fp);
 	}
-	fclose(fp);
 
 	/*for (size_t i = 0; i < centers.size(); i++) {
 		centers[i] += glm::vec3(0, -70, 400);
@@ -510,7 +542,19 @@ void Model::translate(Phalange & phalange, const Vec3f & t) {
 }
 
 void Model::rotate(Phalange & phalange, const Vec3f &axis, float angle) {
+	/*if (abs(angle) > 0){
+		std::cout << "phalange: " << phalange.name << " angle: " << angle << " axis (" << axis[0] << "," << axis[1] << "," << axis[2] << ")" << std::endl;
+		std::cout << "local: " << phalange.local(0, 0) << " " << phalange.local(0, 1) << " " << phalange.local(0, 2) << " ";
+		std::cout << phalange.local(1, 0) << " " << phalange.local(1, 1) << " " << phalange.local(1, 2) << " ";
+		std::cout << phalange.local(2, 0) << " " << phalange.local(2, 1) << " " << phalange.local(2, 2) << std::endl;
+	}*/
 	phalange.local = phalange.local * Transform3f(Eigen::AngleAxisf(angle, axis)).matrix();
+	/*if (abs(angle) > 0){
+		
+		std::cout << "after: " << phalange.local(0, 0) << " " << phalange.local(0, 1) << " " << phalange.local(0, 2) << " ";
+		std::cout << phalange.local(1, 0) << " " << phalange.local(1, 1) << " " << phalange.local(1, 2) << " ";
+		std::cout << phalange.local(2, 0) << " " << phalange.local(2, 1) << " " << phalange.local(2, 2) << std::endl;
+	}*/
 	update(phalange);
 }
 
@@ -531,9 +575,13 @@ void Model::transform_joints(const std::vector<float> & theta) {
 }
 
 void Model::move(const std::vector<float> & theta) {
+	//std::cout << "model->move() called. theta[3,4,5] [" << theta[3] << "," << theta[4] << "," << theta[5] << "]" << std::endl;
 	for (size_t i = 0; i < num_thetas; i++) {
 		this->theta[i] = theta[i];
+		//this->theta[i] = 0;
 	}
+	//this->theta[1] = -70;
+	//this->theta[2] = 400;
 	for (size_t i = 0; i < num_phalanges + 1; i++) {
 		phalanges[i].local = phalanges[i].init_local;
 	}
@@ -546,24 +594,43 @@ void Model::move(const std::vector<float> & theta) {
 
 	for (size_t i = 0; i < num_thetas; ++i) {
 		if (dofs[i].phalange_id < num_phalanges && dofs[i].type == ROTATION_AXIS) {
-			if (dofs[i].axis == Vec3f(1, 0, 0))
+			if (dofs[i].axis == Vec3f(1, 0, 0) || dofs[i].axis == Vec3f(-1, 0, 0))
 				rotateX[i] = theta[i];
-			else if (dofs[i].axis == Vec3f(0, 1, 0))
-				rotateY[i] = theta[i];
-			else if (dofs[i].axis == Vec3f(0, 0, 1))
-				rotateZ[i] = theta[i];
+			else if (dofs[i].axis == Vec3f(0, 1, 0) || dofs[i].axis == Vec3f(0, -1, 0)){
+			//std::cout << "Y-Axis rotation. for phalange? theta = " << theta[i] << " i: " << i << std::endl;
+			rotateY[i] = theta[i];   //Right hand test
+			}
+			else if (dofs[i].axis == Vec3f(0, 0, 1) || dofs[i].axis == Vec3f(0, 0, -1))
+				rotateZ[i] = theta[i];   //Right hand test
 			else
 				cout << "wrong axis" << endl;
 
 		}
-		else
+		else{
 			globals[i] = theta[i];
+			/*
+			if (dofs[i].type == ROTATION_AXIS){
+				std::cout << "!! Global not reversed!! i: " << i << "p_id: " << dofs[i].phalange_id << std::endl;
+				if (dofs[i].axis == Vec3f(0, 1, 0)){
+					globals[i] = theta[i] * -1;   //Right hand test
+					std::cout << "changed global Y axis" << std::endl;
+				}
+				if (dofs[i].axis == Vec3f(0, 0, 1)){
+					globals[i] = theta[i] * -1;   //Right hand test
+					std::cout << "changed global Z axis" << std::endl;
+				}
+			}*/
+		}
 	}
 
 	//transform joints separately
+	//std::cout << "transform_joints(globals)" << std::endl;
 	transform_joints(globals); // pose	
+	//std::cout << "transform_joints(rotateX)" << std::endl;
 	transform_joints(rotateX); // flexion
+	//std::cout << "transform_joints(rotateZ)" << std::endl;
 	transform_joints(rotateZ); // abduction
+	//std::cout << "transform_joints(rotateY)" << std::endl;
 	transform_joints(rotateY); // twist
 }
 
@@ -614,10 +681,59 @@ std::vector<float> Model::get_updated_parameters(const vector<float> & theta, co
 	Transform3f rZ(Eigen::Quaternionf(Eigen::AngleAxisf(delta_theta[rz], axisZ)));
 
 	Mat3f r = (rZ * rX * rY).rotation();
+	/*
+	std::cout << "Rx: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << rX(i, j) << " ";
+		}
+	}
+	std::cout << std::endl;
+	
+	std::cout << "Ry: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << rY(i, j) << " ";
+		}
+	}
+	std::cout << std::endl;
+	
+	std::cout << "Rz: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << rZ(i, j) << " ";
+		}
+	}
+	std::cout << std::endl;
+	
+	std::cout << "phalanges[17].global: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << phalanges[17].global(i, j) << " ";
+		}
+	}
+	std::cout << std::endl;
 
+	std::cout << "R: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << r(i, j) << " ";
+		}
+	}
+	std::cout << std::endl;
+	*/
 	r = phalanges[17].global.block(0, 0, 3, 3) * r;
-
+	/*
+	std::cout << "p[17].gobal*R: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << r(i, j) << " ";
+		}
+	}
+	std::cout << std::endl;
+	*/
 	Vec3f e = r.eulerAngles(0, 1, 2);
+	//std::cout << "eul: " << e[0] << " " << e[1] << " " << e[2] << std::endl;
 
 	updated[rx] = e[0];
 	updated[ry] = e[1];
@@ -674,10 +790,26 @@ Mat3f Model::build_rotation_matrix(Vec3f euler_angles) {
 	return Rz * Ry * Rx;
 }
 
-void Model::manually_adjust_initial_transformations() {
+void Model::manually_adjust_initial_transformations() {	
 	Mat3f R;
 	// thumb
-	R = build_rotation_matrix(Vec3f(-1.45, 0.6, -1.95));
+	R = build_rotation_matrix(Vec3f(-1.45, 0.6, -1.95));  
+	std::cout << "manual R: ";
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			std::cout << R(i, j) << " ";
+		}
+	}
+	Vec3f v = Vec3f(1, 1, 1);
+	Vec3f vv = R*v;
+	std::cout << "R*[1 1 1] = [" << vv(0) << "," << vv(1) << "," << vv(2) << "]" << std::endl;
+
+	if (handedness == 1 && false){
+		R(2, 1) = R(2, 1) * -1;
+		R(3, 1) = R(3, 1) * -1;
+		R(1, 2) = R(1, 2) * -1;
+		R(1, 3) = R(1, 3) * -1;
+	}
 	phalanges[1].init_local.block(0, 0, 3, 3) = R;
 
 	//R = build_rotation_matrix(Vec3f(-1.45, 0.6, -1));
@@ -685,6 +817,12 @@ void Model::manually_adjust_initial_transformations() {
 
 	// index	
 	R = build_rotation_matrix(Vec3f(0, 0, -0.08));
+	if (handedness == 1 && false){
+		R(2, 1) = R(2, 1) * -1;
+		R(3, 1) = R(3, 1) * -1;
+		R(1, 2) = R(1, 2) * -1;
+		R(1, 3) = R(1, 3) * -1;
+	}
 	phalanges[15].init_local.block(0, 0, 3, 3) = R;
 
 	//R = build_rotation_matrix(Vec3f(3.1126, 0, 3.6));
@@ -692,9 +830,21 @@ void Model::manually_adjust_initial_transformations() {
 
 	//middle
 	R = build_rotation_matrix(Vec3f(3.1067, -0.12, -3.1215));
+	if (handedness == 1 && false){
+		R(2, 1) = R(2, 1) * -1;
+		R(3, 1) = R(3, 1) * -1;
+		R(1, 2) = R(1, 2) * -1;
+		R(1, 3) = R(1, 3) * -1;
+	}
 	phalanges[10].init_local.block(0, 0, 3, 3) = R;
 	// ring
 	R = build_rotation_matrix(Vec3f(-3.054, 0.0, -2.9823));
+	if (handedness == 1 && false){
+		R(2, 1) = R(2, 1) * -1;
+		R(3, 1) = R(3, 1) * -1;
+		R(1, 2) = R(1, 2) * -1;
+		R(1, 3) = R(1, 3) * -1;
+	}
 	phalanges[7].init_local.block(0, 0, 3, 3) = R;
 
 	std::vector<float> theta = std::vector<float>(num_thetas, 0);

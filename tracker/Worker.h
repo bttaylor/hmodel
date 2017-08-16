@@ -28,7 +28,8 @@ public:
 public:
 	QGLWidget* glarea = NULL;
 public:
-	void bind_glwidget(QGLWidget* glarea) { this->glarea = glarea; }
+	//void bind_glwidget(QGLWidget* glarea) { this->glarea = glarea;  }
+	void bind_glwidget(QGLWidget* glarea, ConvolutionRenderer* renderer) { this->glarea = glarea; GLWidgetConvRenderer = renderer; }
 	void updateGL();
 
 public:
@@ -40,6 +41,8 @@ public:
 
 	Camera* camera = NULL;
 	Model * model;
+	Model * model2;
+	HandFinder * handfinder2 = NULL;
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -54,6 +57,15 @@ public:
 	energy::Collision E_collision;
 	energy::PoseSpace E_pose;
 
+	Handedness handedness;
+
+	//Brandon Joint Limit testing
+	int joint_number = -1;
+	bool joint_min = true;
+	void swap_hands();
+	ConvolutionRenderer * GLWidgetConvRenderer;
+
+
 	HandFinder* handfinder = NULL;
 	TrivialDetector* trivial_detector = NULL;
 	OffscreenRenderer offscreen_renderer;
@@ -61,12 +73,14 @@ public:
 	TrackingMonitor monitor;
 
 public:
-	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path);
+	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path, Handedness handedness);
 	~Worker();
 	void init_graphic_resources(); ///< not in constructor as needs valid OpenGL context
 	void cleanup_graphic_resources();
 
 public:
 	void track(int iter);
+	void track2(int iter);
 	bool track_till_convergence();
+	bool track_till_convergence(int);
 };

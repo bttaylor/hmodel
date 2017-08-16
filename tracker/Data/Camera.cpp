@@ -92,7 +92,7 @@ Vector3 Camera::pixel_to_image_plane(int i, int j){
 
 Vector2 Camera::world_to_image(const Vector3& wrld){
     Scalar x = wrld[0]/wrld[2];
-    Scalar y = wrld[1]/wrld[2];
+    Scalar y = wrld[1]/wrld[2];	
     x = x*proj(0,0) + proj(0,2);
     y = y*proj(1,1) + proj(1,2);
     return Vector2(x,y);

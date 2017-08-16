@@ -62,6 +62,8 @@ public:
 	int num_outline_fields = 3;
 	int max_num_outlines = 200;
 
+	int handedness;
+
 	std::vector<glm::vec3> centers;
 	std::vector<float> radii;
 	std::vector<glm::ivec3> blocks;
@@ -108,13 +110,13 @@ public:
 	cv::Mat real_color;
 
 	enum Type { HTRACK, HMODEL_OLD, HMODEL} model_type;
-	enum UserName { ANASTASIA, ANDRII, ANONYMOUS } user_name;
+	enum UserName { ANASTASIA, ANDRII, ANONYMOUS, Brandon_L, Brandon_R } user_name;
 	std::string data_path;
 	
 	Model();
 	~Model();
 
-	void init(int user_name, std::string data_path);
+	void init(int user_name, std::string data_path, int handedness);
 
 	void initialize_offsets();
 

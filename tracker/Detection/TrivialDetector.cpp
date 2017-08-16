@@ -79,10 +79,12 @@ Vector3 TrivialDetector::exec(DataFrame& frame, const cv::Mat& sensor_silhouette
 
     ///--- Make hand in standard pose
     success &= compute_centroid_sensor(frame, sensor_silhouette, /*=*/c2);
+	LOG(INFO) << "bloop.";
     if(!success) Vector3(0, 0, 0);
 
     ///--- Get cloud
     offscreenrend->render_offscreen(false, true);
+	LOG(INFO) << "bloop.";
     this->copy_rendered_images_to_cpu();
 
     success &= compute_centroid_render(this->color_render, this->depth_render, /*=*/c1);

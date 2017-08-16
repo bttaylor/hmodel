@@ -7,6 +7,7 @@ class SolutionQueue;
 
 namespace energy{
 class Temporal : public Energy{
+public: //brandon
 	Model * model = NULL;	
 
     SolutionQueue* solution_queue = NULL;
