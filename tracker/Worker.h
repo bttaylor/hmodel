@@ -1,4 +1,6 @@
 #pragma once
+#define _USE_MATH_DEFINES
+
 #include "util/gl_wrapper.h"
 #include "tracker/ForwardDeclarations.h"
 #include "tracker/Types.h"
@@ -43,6 +45,11 @@ public:
 	Model * model;
 	Model * model2;
 	HandFinder * handfinder2 = NULL;
+
+	std::vector<std::vector<float>> Bayes_mu;
+	std::vector<std::vector<float>> Bayes_sig;
+	std::vector<std::string> class_names;
+
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -63,6 +70,9 @@ public:
 	int joint_number = -1;
 	bool joint_min = true;
 	void swap_hands();
+	int classify();
+	void read_bayes_vectors(std::string, std::string, std::vector<std::vector<float>>&);
+	void read_class_names();
 	ConvolutionRenderer * GLWidgetConvRenderer;
 
 

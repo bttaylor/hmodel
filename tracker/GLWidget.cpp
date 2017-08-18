@@ -250,7 +250,9 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 	}
 		break;
 	case Qt::Key_C:{
-					   datastream->clear_stream_buffer();
+		//datastream->clear_stream_buffer();
+		int cur_class = worker->classify();
+		cout << "current class is: " << cur_class << " " << worker->class_names[cur_class] << endl;
 	}
 		break;
 	case Qt::Key_P:{

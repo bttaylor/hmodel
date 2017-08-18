@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
 	worker.bind_glwidget(&glwidget,&glwidget.convolution_renderer);
 	glwidget.show();
 	
+	cout << "gonna constrcut tracker" << endl;
 	Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);	
 	tracker.myoEnable = myoEnable;
 	tracker.sensor = &sensor;

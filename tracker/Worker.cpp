@@ -44,6 +44,15 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	model->update_centers();
 	model->compute_outline();
 
+	Bayes_mu = std::vector<std::vector<float>>();
+	Bayes_sig = std::vector<std::vector<float>>();
+	std::string path = "C:/Projects/ASLRecog/";
+	std::string f1 = "mu_params.txt";
+	std::string f2 = "sig_params.txt";
+	read_bayes_vectors(path, f1, Bayes_mu);
+	read_bayes_vectors(path, f2, Bayes_sig);
+	read_class_names();
+
 	if (handedness == both_hands || handedness == right_hand) {
 		model2 = new Model();  //Right
 		model2->init(4, data_path, left_hand);
@@ -236,4 +245,52 @@ void Worker::track2(int iter) {
 	model2->update_centers();
 	model2->compute_outline();
 	E_temporal.update(current_frame.id, _thetas);
+}
+
+void Worker::read_bayes_vectors(std::string data_path, std::string name, std::vector<std::vector<float>> & input) {
+	FILE *fp = fopen((data_path + name).c_str(), "r");
+	int N = 41;
+
+	for (int i = 0; i < N; ++i) {
+		std::vector<float> theta = std::vector<float>();
+		for (int j = 0; j < 20; ++j) {
+			float a;
+			fscanf(fp, "%f", &a);
+			theta.push_back(a);
+		}
+		input.push_back(theta);
+	}
+	fclose(fp);
+}
+
+void Worker::read_class_names() {
+	std::ifstream fp("C:/Projects/ASLRecog/classes.txt");
+	int N = 41;
+
+	for (int i = 0; i < N; ++i) {
+		std::string name;
+		fp >> name;
+		class_names.push_back(name);
+	}
+	fp.close();
+}
+
+int Worker::classify() {
+	int N = 41;
+	int class_max = 0;
+	float max_likelihood = -9999999999;
+	float likelihood = 0;
+	for (int i = 0; i < N; ++i) {
+		likelihood = 0;
+		for (int j = 0; j < 20; ++j) {
+			likelihood += -.5*log(2 * M_PI * Bayes_sig[i][j]) - (model->theta[j + 9] - Bayes_mu[i][j])*(model->theta[j + 9] - Bayes_mu[i][j]) / (2 * Bayes_sig[i][j]);
+		}
+		if (i == 0)
+			max_likelihood = likelihood;
+		if (likelihood > max_likelihood) {
+			max_likelihood = likelihood;
+			class_max = i;
+		}
+	}
+	return class_max;
 }
