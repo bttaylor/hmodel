@@ -84,9 +84,10 @@ int i = 1;
 int sensor_frame = 0;
 int tracker_frame = 0;
 
-SensorRealSense::SensorRealSense(Camera *camera, bool real_color) : Sensor(camera) {
+SensorRealSense::SensorRealSense(Camera *camera, bool real_color,int handedness) : Sensor(camera) {
 	if (camera->mode() != RealSense)
 		LOG(FATAL) << "!!!FATAL: RealSense needs Intel camera mode";
+<<<<<<< HEAD
 	this->handfinder = new HandFinder(camera,1);
 	handfinder->name = "Left";
 	this->handfinder->_settings.show_wband = false; 
@@ -95,6 +96,9 @@ SensorRealSense::SensorRealSense(Camera *camera, bool real_color) : Sensor(camer
 	R_Handfinder->name = "Right";
 	R_Handfinder->_settings.show_wband = false;
 	R_Handfinder->_settings.show_hand = false;
+=======
+	this->handfinder = new HandFinder(camera,handedness);
+>>>>>>> refs/remotes/origin/master
 	this->real_color = real_color;
 }
 
@@ -102,12 +106,19 @@ int SensorRealSense::initialize() {
 	std::cout << "SensorRealSense::initialize()" << std::endl;
 	sense_manager = PXCSenseManager::CreateInstance();
 	if (!sense_manager) {
+		std::cout << "Unable to create the PXCSenseManager" << std::endl;
 		wprintf_s(L"Unable to create the PXCSenseManager\n");
 		return false;
 	}
-	sense_manager->EnableStream(PXCCapture::STREAM_TYPE_COLOR, D_width, D_height, 60);
-	sense_manager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, D_width, D_height, 60);
-	sense_manager->Init();
+	Intel::RealSense::NSStatus::Status stat = sense_manager->EnableStream(PXCCapture::STREAM_TYPE_COLOR, D_width, D_height, 60);
+	if (stat == Intel::RealSense::NSStatus::STATUS_NO_ERROR)
+		std::cout << "   Enabled Color Stream" << std::endl;
+	stat = sense_manager->EnableStream(PXCCapture::STREAM_TYPE_DEPTH, D_width, D_height, 60); 
+	if (stat == Intel::RealSense::NSStatus::STATUS_NO_ERROR)
+		std::cout << "   Enabled Depth Stream" << std::endl;
+	stat = sense_manager->Init();
+	if (stat == Intel::RealSense::NSStatus::STATUS_NO_ERROR)
+		std::cout << "   sense_manager->Init()" << std::endl;
 
 	PXCSession *session = PXCSession::CreateInstance();
 	PXCSession::ImplDesc desc, desc1;
@@ -236,7 +247,7 @@ bool SensorRealSense::fetch_streams(DataFrame &frame) {
 }
 
 bool SensorRealSense::concurrent_fetch_streams(DataFrame &frame, HandFinder & other_handfinder, cv::Mat & full_color) {
-
+	cout << "SensorRealSense::concurrent_fetch_streams handfinder: " << (long)&other_handfinder << endl;
 	std::unique_lock<std::mutex> lock(swap_mutex);
 	condition.wait(lock, [] {return thread_released; });
 	main_released = false;

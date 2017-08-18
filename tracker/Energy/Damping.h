@@ -7,6 +7,7 @@
 namespace energy{
 
 class Damping : public Energy{
+public: //brandon
 	Model * model = NULL;
 
 public:

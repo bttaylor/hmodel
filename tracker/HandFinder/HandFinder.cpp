@@ -14,10 +14,14 @@
 
 #include "tracker/TwSettings.h"
 
+<<<<<<< HEAD
 HandFinder::HandFinder(Camera *camera): HandFinder(camera,1) {
 }
 
 HandFinder::HandFinder(Camera *camera, int _color) : camera(camera){
+=======
+HandFinder::HandFinder(Camera *camera, int handedness) : camera(camera){
+>>>>>>> refs/remotes/origin/master
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
 	this->_settings.color = _color;
@@ -31,6 +35,7 @@ HandFinder::HandFinder(Camera *camera, int _color) : camera(camera){
      TwAddVarRW(tw_settings->anttweakbar(), "rgb_min", TW_TYPE_COLOR3F,  &_settings.hsv_min.data, "group=HandFinder");
      TwAddVarRW(tw_settings->anttweakbar(), "rgb_max", TW_TYPE_COLOR3F,  &_settings.hsv_max.data, "group=HandFinder");
 #endif
+<<<<<<< HEAD
 
 	 std::string path;
 	 if (_settings.color == 1){
@@ -41,6 +46,14 @@ HandFinder::HandFinder(Camera *camera, int _color) : camera(camera){
 	 }
 	 else{
 		 path = local_file_path("wristband.txt", true/*exit*/);
+=======
+	 std::string path;
+	 if (handedness == 1){  //1 = Right == Blue
+		 path = local_file_path("blue_wristband.txt", true/*exit*/);  //Testing with yellow reversed
+	 }
+	 else{
+		 path = local_file_path("yellow_wristband.txt", true/*exit*/);
+>>>>>>> refs/remotes/origin/master
 	 }
     if(!path.empty()){
         std::cout << "Reading Wristband Colors from: " << path << std::endl;
@@ -64,8 +77,15 @@ Vector3 point_at_depth_pixel(cv::Mat& depth, int x, int y, Camera* camera) {
 	return camera->depth_to_world(x, y, z);
 }
 
-void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {    
+void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
+	binary_classification(depth, color, 0);
+}
+
+void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color, int frame_num) {    
     _wristband_found = false;
+
+
+	//std::cout << "In binary_classification. frame_num: " << frame_num << std::endl << std::endl;
 
     TIMED_SCOPE(timer, "Worker::binary_classification");
 
@@ -86,7 +106,8 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
 
     // TIMED_BLOCK(timer,"Worker_classify::(convert to HSV)")
     {
-        cv::cvtColor(color, color_hsv, CV_RGB2HSV);
+		cv::cvtColor(color, color_hsv, CV_RGB2HSV);		
+		cv::imwrite("../test/hsv" + std::to_string(frame_num) + ".png", color_hsv);
         cv::inRange(color_hsv, hsv_min, hsv_max, /*=*/ mask_wristband);
         cv::inRange(depth, camera->zNear(), depth_farplane /*mm*/, /*=*/ in_z_range);
         cv::bitwise_and(mask_wristband, in_z_range, mask_wristband);
@@ -97,6 +118,8 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
     {
         cv::Mat labels, stats, centroids;
         int num_components = cv::connectedComponentsWithStats(mask_wristband, labels, stats, centroids, 4 /*connectivity={4,8}*/);       
+
+		//std::cout << "Num_components: " << num_components << std::endl;
 
         ///--- Generate array to sort
         std::vector< int > to_sort(num_components);
@@ -123,12 +146,19 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
             
             ///--- Select 2nd biggest component
             mask_wristband = (labels==to_sort[1]);
+
+			//std::cout << "area?: " << stats.at<int>(1, cv::CC_STAT_AREA) << std::endl;
             _wristband_found = true;
         }
     }
-
+	
 	if (_settings.show_wband) {
+<<<<<<< HEAD
 		cv::imshow(name + "show_wband", mask_wristband);
+=======
+		cv::imwrite("../test/wristband" + std::to_string(frame_num) + ".png", mask_wristband);
+		cv::imshow("show_wband", mask_wristband);
+>>>>>>> refs/remotes/origin/master
 		cv::waitKey(1);
 	}		
     else
@@ -150,6 +180,7 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
             }
         }
         ushort depth_wrist = (avg.second==0) ? camera->zNear() : avg.first / avg.second; 
+		//std::cout << "wristband count: " << avg.second << " average depth: " << depth_wrist << std::endl;
 
         ///--- First just extract pixels at the depth range of the wrist
         cv::inRange(depth, depth_wrist-depth_range, /*mm*/
@@ -163,6 +194,15 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
     _wband_dir = Vector3(0,0,-1);
     // TIMED_BLOCK(timer,"Worker_classify::(PCA)")
     {
+
+		//std::cout << "### Camera Iproj" << std::endl;
+		//for (int i = 0; i < 3; ++i){
+		//	for (int j = 0; j < 3; ++j){
+		//		std::cout << camera->iproj(i, j) << " ";
+		//	}
+		//}
+		//std::cout << std::endl;
+
         ///--- Compute MEAN
         int counter = 0;
         for (int row = 0; row < mask_wristband.rows; ++row){
@@ -174,6 +214,7 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
         }
         _wband_center /= counter;
         std::vector<Vector3> pts; pts.push_back(_wband_center);
+		//std::cout << "wband_center: " << _wband_center[0] << " " << _wband_center[1] << " " << _wband_center[2] << std::endl;
 
         ///--- Compute Covariance
         static std::vector<Vector3> points_pca;
@@ -191,6 +232,7 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
                 }
             }
         }
+		
         if (points_pca.size() == 0) return;
         ///--- Compute PCA
         Eigen::Map<Matrix_3xN> points_mat(points_pca[0].data(), 3, points_pca.size() );       
@@ -203,6 +245,9 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
         ///--- Allow wrist to point downward
         if(_wband_dir.y()<0)
             _wband_dir = -_wband_dir;
+
+		//std::cout << "points_pca.size(): " << points_pca.size() << std::endl;
+		//std::cout << "$$$ wband_dir: " << _wband_dir[0] << " " << _wband_dir[1] << " " << _wband_dir[2] << std::endl;
     }
     // TIMED_BLOCK(timer,"Worker_classify::(in sphere)")
     {
@@ -223,9 +268,16 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
             }
         }
     }
+<<<<<<< HEAD
 
     if(_settings.show_hand){
         cv::imshow(name + "show_hand", sensor_silhouette);
+=======
+	
+	if (_settings.show_hand){
+		cv::imwrite("../test/hand" + std::to_string(frame_num) + ".png", sensor_silhouette);
+        cv::imshow("show_hand", sensor_silhouette);
+>>>>>>> refs/remotes/origin/master
     } else {
         cv::destroyWindow(name + "show_hand");
     }

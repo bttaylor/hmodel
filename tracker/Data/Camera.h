@@ -11,7 +11,9 @@ class Camera{
 private:
     CAMERAMODE _mode;
     Matrix3 proj;
+public:
     Matrix3 iproj;
+private:
     Scalar _zNear; ///< near clip plane (mm)
     Scalar _zFar;  ///< far clip plane (mm)
     int _width;

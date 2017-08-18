@@ -2,6 +2,8 @@
 #include "opencv2/core/core.hpp" /// cv::Mat
 #include "tracker/Types.h"
 #include "Camera.h"
+#include <time.h>
+#include <chrono>
 
 typedef unsigned short DepthPixel;    
 typedef cv::Vec3b ColorPixel;
@@ -12,8 +14,13 @@ struct DataFrame{
     cv::Mat depth; ///< CV_16UC1
 	cv::Mat silhouette;
 	cv::Mat full_color;
-   
-    DataFrame(int id):id(id){}
+	//time_t timestamp;
+	std::chrono::milliseconds timestamp;
+
+    DataFrame(int id):id(id){
+		timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		//time(&timestamp);
+	}
         
     /// @param horizontal pixel
     /// @param vertical pixel

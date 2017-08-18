@@ -22,8 +22,8 @@ uniform mat4 view;
 //const int num_centers = 34;
 
 //HModel with wrist
-const int num_blocks = 30; 
-const int num_centers = 38; 
+const int num_blocks = 30 * 2; // 30;
+const int num_centers = 38 * 2; //38;
 
 //HTrack
 //const int num_blocks = 17;

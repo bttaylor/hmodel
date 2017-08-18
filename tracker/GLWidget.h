@@ -3,12 +3,14 @@
 #include "tracker/ForwardDeclarations.h"
 #include "tracker/OpenGL/KinectDataRenderer/KinectDataRenderer.h"
 #include "tracker/OpenGL/ConvolutionRenderer/ConvolutionRenderer.h"
+#include "apps\hmodel_atb\DataCollector.h"
 
 class GLWidget : public QGLWidget {
 public:
 	Worker * worker;
 	DataStream * const datastream;
 	SolutionStream * const solutions;
+	DataCollector* collector;
 
 	Camera*const _camera;
 	KinectDataRenderer kinect_renderer;
@@ -18,10 +20,31 @@ public:
 	bool real_color;
 
 	std::string data_path;
+	std::string store_path;
+
+	//Brandon
+	//Worker * worker2 = NULL;
+	bool recording;
+	std::string current_prompt;
+	std::vector<std::string> prompts;
+	void load_prompts(int);
+	int prompt_i;
+	int prompt_order[100];
+	int set;
+	int scale_adj;
+	int width_adj;
+	int thick_adj;
+	void fitModelPhalanges();
+	void fitModelOffsets();
+	void fitModelRadii(int);
+	int phalange_adj = 1;
+	int axis = 0;
+	int offset = 0;
+	bool myoEnable;
 
 public:
 
-	GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path);
+	GLWidget(Worker* worker, DataCollector* collector, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path, std::string store_path);
 
 	~GLWidget();
 
@@ -54,4 +77,6 @@ private:
 	void wheelEvent(QWheelEvent * event);
 
 	void keyPressEvent(QKeyEvent *event);
+
+	std::string get_next_prompt();
 };

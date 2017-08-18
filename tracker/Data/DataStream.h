@@ -20,6 +20,7 @@ public:
     int size() const{ return frames.size(); }
 public:
 	int add_frame(const void* color_buffer, const void* depth_buffer, const void* full_color_buffer);
+	void clear_stream_buffer();
 public:
     DataStream(Camera* camera);
     ~DataStream();

@@ -1,5 +1,6 @@
 #include "DataCollector.h"
-
+#include <fstream>
+#include <time.h>
 
 DataCollector::DataCollector()
 	:onArm(false), isUnlocked(false), roll_w(0), pitch_w(0), yaw_w(0), currentPose(), emgSamples(), orient_q(), orient_timestamp(0),
@@ -65,6 +66,7 @@ void DataCollector::onOrientationData(myo::Myo* myo, uint64_t timestamp, const m
 	if (recording) {
 		if (o_buf_i == 0) {
 			time(&first_EMG);
+			std::cout << "FIRST EMG" << std::endl;
 			//QueryPerformanceCounter(&first_EMG);
 		}
 		orient_q = quat;
@@ -91,7 +93,8 @@ void DataCollector::onOrientationData(myo::Myo* myo, uint64_t timestamp, const m
 	roll_w = static_cast<int>((roll + (float)M_PI) / (M_PI * 2.0f) * 18);
 	pitch_w = static_cast<int>((pitch + (float)M_PI / 2.0f) / M_PI * 18);
 	yaw_w = static_cast<int>((yaw + (float)M_PI) / (M_PI * 2.0f) * 18);
-	std::cout << "myo onOrientationChanged. pitch: " << pitch_w << std::endl;
+	
+	//std::cout << "myo onOrientationChanged. pitch: " << pitch_w << std::endl;
 }
 
 // onPose() is called whenever the Myo detects that the person wearing it has changed their pose, for example,
@@ -191,4 +194,62 @@ void DataCollector::print()
 	}
 
 	std::cout << std::flush;
+}
+
+void DataCollector::saveMyoData(std::string filepath){
+	
+	std::ofstream outfile;
+
+	std::string path = filepath + "myoEMG.csv";
+	//write out myo data - EMG has different sample rate than other info
+	
+	//myfile.open("myoEMG.csv", std::ofstream::app);
+	outfile.open(path, std::ofstream::app);
+	
+	std::cout << "in Myo::saveMyoData trying path: " << path << std::endl;
+	//outfile << "blerp blorp";
+	//outfile.close();
+
+	std::cout << "orient_time_buff[0] " << e_buf_i << std::endl;
+	//std::cout << "first_EMG " << first_EMG << std::endl;
+	
+	outfile << first_EMG << std::endl;
+	for (int i = 0; i < e_buf_i; i++) {
+		outfile << emg_time_buffer[i] << ",";
+		outfile << static_cast<int>(emg_buffer[i][0]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][1]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][2]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][3]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][4]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][5]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][6]) << ",";
+		outfile << static_cast<int>(emg_buffer[i][7]) << std::endl;
+	}
+	outfile.close();
+
+	//write out other myo data
+	if ((a_buf_i != o_buf_i) || (a_buf_i != g_buf_i)){
+		std::cout << "Buffer Mismatch Error in the Myo" << std::endl;
+		//dumpMyoBuffersIndividually();
+	}
+	else {
+		path = filepath + "myoIMU.csv";		
+		outfile.open(path, std::ofstream::app);
+		outfile << first_IMU << std::endl;
+		for (int i = 0; i < o_buf_i; i++) {
+			outfile << orient_time_buffer[i] << ",";
+			outfile << orient_buffer[i].w() << ",";
+			outfile << orient_buffer[i].x() << ",";
+			outfile << orient_buffer[i].y() << ",";
+			outfile << orient_buffer[i].z() << ",";
+			outfile << accel_buffer[i].x() << ",";
+			outfile << accel_buffer[i].y() << ",";
+			outfile << accel_buffer[i].z() << ",";
+			outfile << gyro_buffer[i].x() << ",";
+			outfile << gyro_buffer[i].y() << ",";
+			outfile << gyro_buffer[i].z() << std::endl;
+		}
+		outfile.close();
+	}
+	
 }

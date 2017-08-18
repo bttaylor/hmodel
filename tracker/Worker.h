@@ -1,8 +1,5 @@
 #pragma once
-#include <math.h>
-#include <vector>
 #define _USE_MATH_DEFINES
-#include <cmath>
 #include "util/gl_wrapper.h"
 #include "tracker/ForwardDeclarations.h"
 #include "tracker/Types.h"
@@ -39,7 +36,8 @@ public:
 public:
 	QGLWidget* glarea = NULL;
 public:
-	void bind_glwidget(QGLWidget* glarea) { this->glarea = glarea; }
+	//void bind_glwidget(QGLWidget* glarea) { this->glarea = glarea;  }
+	void bind_glwidget(QGLWidget* glarea, ConvolutionRenderer* renderer) { this->glarea = glarea; GLWidgetConvRenderer = renderer; }
 	void updateGL();
 
 public:
@@ -51,7 +49,13 @@ public:
 
 	Camera* camera = NULL;
 	Model * model;
-	//Model * model2;
+	Model * model2;
+	HandFinder * handfinder2 = NULL;
+
+	std::vector<std::vector<float>> Bayes_mu;
+	std::vector<std::vector<float>> Bayes_sig;
+	std::vector<std::string> class_names;
+
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -65,14 +69,18 @@ public:
 	energy::JointLimits E_limits;
 	energy::Collision E_collision;
 	energy::PoseSpace E_pose;
-	/*
-	energy::Fitting E_fitting2;
-	energy::Temporal E_temporal2;
-	energy::Damping E_damping2;
-	energy::JointLimits E_limits2;
-	energy::Collision E_collision2;
-	energy::PoseSpace E_pose2;
-	*/
+
+	Handedness handedness;
+
+	//Brandon Joint Limit testing
+	int joint_number = -1;
+	bool joint_min = true;
+	void swap_hands();
+	int classify();
+	void read_bayes_vectors(std::string, std::string, std::vector<std::vector<float>>&);
+	void read_class_names();
+	ConvolutionRenderer * GLWidgetConvRenderer;
+
 	HandFinder* handfinder = NULL;
 	//2nd hand mod
 	HandFinder* R_Handfinder = NULL;
@@ -82,18 +90,16 @@ public:
 	TrackingMonitor monitor;
 
 public:
-	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path);
+	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path, Handedness handedness);
 	~Worker();
 	void init_graphic_resources(); ///< not in constructor as needs valid OpenGL context
 	void cleanup_graphic_resources();
 
 public:
-	//void track(int iter, Model* model, int model_num);
-	void track(int iter);// , Model* model, int model_num);
-	bool track_till_convergence();
-	//bool track_till_convergence(int);
 
-	int classify();
-	void read_bayes_vectors(std::string , std::string , std::vector<std::vector<float>>&);
-	void read_class_names();
+	void track(int iter);
+	void track2(int iter);
+	bool track_till_convergence();
+	bool track_till_convergence(int);
+
 };

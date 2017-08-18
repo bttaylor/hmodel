@@ -27,6 +27,7 @@ public:
     };
 	
 private:
+public:  //brandon
 	Model * model = NULL;
     std::vector<Point> s;
     std::vector<Point> t;

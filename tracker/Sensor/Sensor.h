@@ -59,7 +59,7 @@ private:
 class SensorRealSense : public Sensor {
 public:
 	SensorRealSense(Camera* camera);
-	SensorRealSense(Camera* camera, bool real_color);
+	SensorRealSense(Camera* camera, bool real_color, int handedness);
 	virtual ~SensorRealSense();
     bool spin_wait_for_data(float timeout_seconds);
 	bool fetch_streams(DataFrame& frame); 

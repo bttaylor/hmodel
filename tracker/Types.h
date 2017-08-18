@@ -20,6 +20,10 @@ typedef Eigen::VectorXf VectorN;
 
 const int d = 3;
 
+//Brandon
+enum Handedness {left_hand, right_hand, both_hands};
+//enum UserName { ANASTASIA, ANDRII, ANONYMOUS, Brandon_L, Brandon_R } user_name;
+
 /// Parameters vector
 const int num_thetas = 29;
 const int num_thetas_ignore = 9;

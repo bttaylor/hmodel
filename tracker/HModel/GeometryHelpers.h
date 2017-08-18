@@ -131,7 +131,7 @@ bool intersect_circle_line(const glm::dvec2 & c, double r, double slope, double 
 	}
 }
 
-void intersect_circle_segment(const glm::dvec2 & c, double r, const glm::dvec2 & p, const glm::dvec2 & q, glm::dvec2 & t1, glm::dvec2 & t2, bool & i1, bool & i2) {
+void intersect_circle_segment(const glm::dvec2 & c, double r, const glm::dvec2 & p, const glm::dvec2 & q, glm::dvec2 & t1, glm::dvec2 & t2, bool & i1, bool & i2) {	
 	double k = (p[1] - q[1]) / (p[0] - q[0]);
 	double b = p[1] - k * p[0];
 	if (!intersect_circle_line(c, r, k, b, t1, t2)) {
@@ -157,6 +157,9 @@ bool intersect_segment_segment(const glm::dvec2 & a, const glm::dvec2 & b, const
 	t = glm::dvec2(xi, yi);
 	if (xi < std::min(x1, x2) || xi > std::max(x1, x2)) return false;
 	if (xi < std::min(x3, x4) || xi > std::max(x3, x4)) return false;
+	if (yi < std::min(y1, y2) || yi > std::max(y1, y2)) return false;  //Brandon Mod
+	if (yi < std::min(y3, y4) || xi > std::max(y3, y4)) return false;  //Brnadon Mod
+	return true; //Brandon Mod
 }
 
 std::vector<std::pair<glm::dvec2, glm::dvec2>> intersect_segment_segment_same_circle(const glm::dvec2 & c, double r, const glm::dvec2 & s1, const glm::dvec2 & e1, const glm::dvec2 & s2, const glm::dvec2 & e2) {

@@ -865,6 +865,7 @@ void FindFingers::feed_results(const Matrix_MxN &depth) {
 }
 
 Matrix_MxN FindFingers::process_input() {
+	cout << "FindFingers::process_input() model: " << (long)worker->model << endl;
     if (call_stack) cout << "[FindFingers::process_input()]" << endl;
 
     size_t kernel_size = 1;

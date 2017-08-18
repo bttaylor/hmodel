@@ -19,8 +19,10 @@ int main(int argc, char* argv[]) {
 
 	bool benchmark = false;
 	bool playback = false;
-	int user_name = 0;
+	int user_name = 10;
+	bool myoEnable = false;
 
+<<<<<<< HEAD
 	//myo::Hub hub("taylor.com.text");
 	//myo::Myo* myo = hub.waitForMyo(10000);
 	//DataCollector collector = DataCollector();
@@ -31,21 +33,40 @@ int main(int argc, char* argv[]) {
 
 	//myo->setStreamEmg(myo::Myo::streamEmgEnabled);
 	//hub.addListener(&collector);
+=======
+	DataCollector collector = DataCollector();
+	myo::Hub hub("taylor.com.text");
+	if (myoEnable) {		
+		myo::Myo* myo = hub.waitForMyo(10000);
+		//DataCollector collector = DataCollector();
 
-	std::string sequence_path = "C:/Projects/Data/";
-	std::string data_path = "C:/Projects/clean0426/hmodel-master/data/";
-	std::string sequence_name = "Participant33";
+		if (!myo) {
+			std::cout << "Unable to find a Myo!";
+		}
+
+		myo->setStreamEmg(myo::Myo::streamEmgEnabled);
+		hub.addListener(&collector);
+	}
+>>>>>>> refs/remotes/origin/master
+
+	Handedness handedness = right_hand;  //0 == Left; 1 == Right; 2 == Both
+	std::string sequence_path = "C:/Projects/Data/TwoHand/"; // "C:/Projects/Data/Fingerspelling/";
+	std::string data_path = "C:/Projects/ASLRecog/hmodel/data/"; // "C:/Projects/clean0426/hmodel-master/data/";
+	std::string sequence_name = "P01";  //"P01";
 
 	Q_INIT_RESOURCE(shaders);
 	QApplication app(argc, argv);
 
 	Camera camera(QVGA, 60);
-	SensorRealSense sensor(&camera, real_color);
 
+	//0 = Left == Yellow; 1 == Right == Blue
+	SensorRealSense sensor(&camera, real_color, handedness);
+	std::cout << "after SensorRealSense sensor()" << std::endl;
 	DataStream datastream(&camera);
 	SolutionStream solutions;
 
-	Worker worker(&camera, test, benchmark, save_rastorized_model, user_name, data_path);
+	//0 = Left == Yellow; 1 == Right == Blue
+	Worker worker(&camera, test, benchmark, save_rastorized_model, user_name, data_path, handedness);
 
 	{
 		worker.settings->termination_max_iters = 8;
@@ -72,16 +93,24 @@ int main(int argc, char* argv[]) {
 		worker._settings.termination_max_rigid_iters = 1;
 	}
 
-	GLWidget glwidget(&worker, &datastream, &solutions, playback, false /*real_color*/, data_path);
-	worker.bind_glwidget(&glwidget);
+	GLWidget glwidget(&worker, &collector, &datastream, &solutions, playback, false /*real_color*/, data_path, sequence_path + sequence_name + "/");
+	glwidget.myoEnable = myoEnable;
+	worker.bind_glwidget(&glwidget,&glwidget.convolution_renderer);
 	glwidget.show();
+<<<<<<< HEAD
 
 	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color);
 	//Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
+=======
+	
+	cout << "gonna constrcut tracker" << endl;
+	Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);	
+	tracker.myoEnable = myoEnable;
+>>>>>>> refs/remotes/origin/master
 	tracker.sensor = &sensor;
 	tracker.datastream = &datastream;
 	tracker.solutions = &solutions;
-
+	
 	///--- Starts the tracking
 	tracker.toggle_tracking(!benchmark && !playback);
 	tracker.toggle_benchmark(benchmark);

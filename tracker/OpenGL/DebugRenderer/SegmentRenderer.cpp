@@ -33,6 +33,7 @@ void SegmentRenderer::render() {
 	vao.bind();
 	program.bind();
 	glEnable(GL_LINE_SMOOTH);
+	cout << "segmentrenderer (GL_lines,0,num_primitives): " << num_primitives << endl;
 	glDrawArrays(GL_LINES, 0, num_primitives);
 	glDisable(GL_LINE_SMOOTH);
 	program.release();
