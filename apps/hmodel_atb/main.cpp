@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
 	}
 
-	Handedness handedness = left_hand;
+	Handedness handedness = right_hand;
 	std::string sequence_path = "C:/Projects/Data/";
 	std::string data_path = "C:/Projects/MyoFaceVersion/hmodel/data/";
 	std::string sequence_name = "Participant33";
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 	QApplication app(argc, argv);
 
 	Camera camera(QVGA, 60);
-	SensorRealSense sensor(&camera, real_color, handedness);
+	SensorRealSense sensor(&camera, real_color, handedness, data_path);
 
 	DataStream datastream(&camera);
 	SolutionStream solutions;

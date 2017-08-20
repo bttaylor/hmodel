@@ -85,7 +85,7 @@ public:
 
 	int classify();
 	void read_bayes_vectors(std::string , std::string , std::vector<std::vector<float>>&);
-	void read_class_names();
+	void read_class_names(std::string, std::string);
 	//Brandon
 	Model* get_active_model();
 };

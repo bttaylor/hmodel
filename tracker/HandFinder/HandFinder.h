@@ -9,7 +9,7 @@ private:
     Camera*const camera=NULL;
     TrivialDetector*const trivial_detector=NULL;
 public:
-    HandFinder(Camera * camera, Handedness handedness);
+    HandFinder(Camera * camera, Handedness handedness, std::string data_path);
 	~HandFinder() {
 		delete[] sensor_indicator;
 	}

@@ -54,15 +54,9 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	//Brandon
 	Bayes_mu = std::vector<std::vector<float>>();
 	Bayes_sig = std::vector<std::vector<float>>();
-	std::string path = "C:/Projects/ASLRecog/";			//TODO: Fix this
-	std::string f1 = "mu_params.txt";
-	std::string f2 = "sig_params.txt";
-	std::cout << "gonna read something" << std::endl;
-	read_bayes_vectors(path, f1, Bayes_mu);
-	read_bayes_vectors(path, f2, Bayes_sig);
-	read_class_names();
-	//read_bayes_vectors("C:/Projects/ASLRecog/", "mu_params.txt", Bayes_mu);
-	//read_bayes_vectors("C:/Projects/ASLRecog/", "sig_params.txt", Bayes_sig);
+	read_bayes_vectors(data_path, "classifiers/mu_params.txt", Bayes_mu);
+	read_bayes_vectors(data_path, "classifiers/sig_params.txt", Bayes_sig);
+	read_class_names(data_path,"classifiers/classes.txt");
 
 }
 
@@ -79,7 +73,7 @@ void Worker::init_graphic_resources() {
 	///--- Initialize the energies modules
 	using namespace energy;
 	trivial_detector = new TrivialDetector(camera, &offscreen_renderer);
-	handfinder = new HandFinder(camera, handedness);
+	handfinder = new HandFinder(camera, handedness, data_path);
 	E_fitting.init(this);
 
 	E_limits.init(model);
@@ -166,13 +160,12 @@ void Worker::read_bayes_vectors(std::string data_path, std::string name, std::ve
 	std::cout << "Reading some vecotr for the classifier" << std::endl;
 }
 
-void Worker::read_class_names(){
-	std::string data_path = "C:/Projects/ASLRecog/classes.txt";
-	std::ifstream fp("C:/Projects/ASLRecog/classes.txt");
-	//FILE *fp = fopen((data_path).c_str(), "r");
+void Worker::read_class_names(std::string data_path, std::string name){
+	std::string full_path = data_path + name;
+	std::ifstream fp(full_path);
+	
 	int N = 41;
 
-	//fscanf(fp, "%d", &N);
 	for (int i = 0; i < N; ++i) {
 		std::string name;
 		fp >> name;

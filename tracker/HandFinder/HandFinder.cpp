@@ -14,7 +14,7 @@
 
 #include "tracker/TwSettings.h"
 
-HandFinder::HandFinder(Camera *camera, Handedness handedness) : camera(camera){
+HandFinder::HandFinder(Camera *camera, Handedness handedness, std::string data_path) : camera(camera){
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
 
@@ -32,10 +32,12 @@ HandFinder::HandFinder(Camera *camera, Handedness handedness) : camera(camera){
 
 	 std::string path;
 	 if (handedness == right_hand) {
-		 path = local_file_path("blue_wristband.txt", true);
+		 path = data_path + "wristbands/blue_wristband.txt";
+		 //path = local_file_path("blue_wristband.txt", true);
 	 }
 	 else {
-		 path = local_file_path("yellow_wristband.txt", true);
+		 path = data_path + "wristbands/yellow_wristband.txt";
+		 //path = local_file_path("yellow_wristband.txt", true);
 	 }
     
     if(!path.empty()){
