@@ -9,6 +9,7 @@
 #include <QGLBuffer>
 #include <QGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
+#include "tracker/Worker.h"
 
 #include <iostream>
 #include <fstream>
@@ -42,15 +43,17 @@ glm::vec3 ConvolutionRenderer::world_to_window_coordinates(glm::vec3 point) {
 	return point_window;
 }
 
-ConvolutionRenderer::ConvolutionRenderer(Model *model, bool real_color, std::string data_path) {
+ConvolutionRenderer::ConvolutionRenderer(Worker *worker, bool real_color, std::string data_path) {
 	this->data_path = data_path;
-	this->model = model;
+	this->worker = worker;
+	//this->model = model;
 	this->real_color = real_color;	
 }
 
-ConvolutionRenderer::ConvolutionRenderer(Model *model, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& projection, std::string data_path) {
+ConvolutionRenderer::ConvolutionRenderer(Worker *worker, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& projection, std::string data_path) {
 	this->data_path = data_path;
-	this->model = model;
+	//this->model = model;
+	this->worker = worker;
 	this->init(mode);
 	this->projection = projection;
 }
@@ -80,7 +83,7 @@ void ConvolutionRenderer::setup_canvas() {
 }
 
 void ConvolutionRenderer::pass_model_to_shader(bool fingers_only) {
-
+	Model * model = worker->get_active_model();
 	if (mode == FRAMEBUFFER) {
 		glm::vec3 min_x_world = glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
 		glm::vec3 min_y_world = glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
@@ -182,6 +185,7 @@ void ConvolutionRenderer::setup_silhoeutte() {
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	Model* model = worker->get_active_model();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, model->silhouette_texture.cols, model->silhouette_texture.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, model->silhouette_texture.ptr());
 	glUniform1i(glGetUniformLocation(program.programId(), "silhouette"), 1);
 
@@ -242,6 +246,7 @@ void ConvolutionRenderer::render() {
 	vao.bind();
 	program.bind();
 
+	Model *model = worker->get_active_model();
 	//cout << "render" << endl;
 	camera.setup(program.programId(), projection);
 	if (real_color) setup_texture(model->real_color);

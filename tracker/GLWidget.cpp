@@ -23,7 +23,7 @@ worker(worker),
 datastream(datastream),
 solutions(solutions),
 _camera(worker->camera),
-convolution_renderer(worker->model, real_color, data_path) {
+convolution_renderer(worker, real_color, data_path) {
 	this->playback = playback;
 	this->data_path = data_path;
 	this->resize(640 * 2, 480 * 2);

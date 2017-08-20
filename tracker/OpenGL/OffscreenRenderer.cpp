@@ -15,11 +15,11 @@ void OffscreenRenderer::init(Camera* camera, Worker * worker, std::string data_p
 	
 	if (render_block_id) {
 		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
-		convolution_renderer = new ConvolutionRenderer(worker->get_active_model(), ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);
+		convolution_renderer = new ConvolutionRenderer(worker, ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);
 	}
 	else { // render_depth
 		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
-		convolution_renderer = new ConvolutionRenderer(worker->get_active_model(), ConvolutionRenderer::RASTORIZER, camera->view_projection_matrix(), data_path);
+		convolution_renderer = new ConvolutionRenderer(worker, ConvolutionRenderer::RASTORIZER, camera->view_projection_matrix(), data_path);
 	}
 }
 

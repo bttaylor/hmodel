@@ -105,8 +105,7 @@ class ConvolutionRenderer {
 	};
 
 public:
-	//Brandon: added additional shadermodes
-	enum SHADERMODE { NORMAL, FRAMEBUFFER, RASTORIZER, TWO_HAND_NORMAL, TWO_HAND_FRAMEBUFFER, TWO_HAND_RASTORIZER };
+	enum SHADERMODE { NORMAL, FRAMEBUFFER, RASTORIZER };
 
 	int window_left = 0;
 	int window_bottom = 0;
@@ -142,14 +141,19 @@ public:
 
 	Cylinders *cylinders;
 	Eigen::Matrix4f projection;
-	Model * model;
+	//Model * model;
+	Worker * worker;
 	SHADERMODE mode;
 	bool real_color;
 	std::string data_path;
 	
-	ConvolutionRenderer(Model *model, bool real_color, std::string data_path);
+	//ConvolutionRenderer(Model *model, bool real_color, std::string data_path);
 
-	ConvolutionRenderer(Model *model, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& view_projection, std::string data_path);
+	//ConvolutionRenderer(Model *model, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& view_projection, std::string data_path);
+
+	ConvolutionRenderer(Worker *worker, bool real_color, std::string data_path);
+
+	ConvolutionRenderer(Worker *worker, ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& view_projection, std::string data_path);
 
 	void send_vertices_to_shader(std::string vertices_name);
 
