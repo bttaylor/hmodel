@@ -106,23 +106,7 @@ void ConvolutionRenderer::pass_model_to_shader(bool fingers_only) {
 		glUniform1f(glGetUniformLocation(program.programId(), "max_y"), max_y_window[1]);
 
 		glUniform1i(glGetUniformLocation(program.programId(), "fingers_only"), fingers_only);
-		/*for (size_t i = 0; i < 4; i++) {
-			for (size_t j= 0; j< 4; j++) {
-			cout << camera.MVP_glm[i][j] << " ";
-			}
-			cout << endl;
-			}
-			cout << endl << endl;
-
-			cout << "min_x_world = " << min_x_world[0] << endl;
-			cout << "min_y_world = " << min_y_world[1] << endl;
-			cout << "max_x_world = " << max_x_world[0] << endl;
-			cout << "max_y_world = " << max_y_world[1] << endl;
-
-			cout << "min_x = " << min_x_window[0] << endl;
-			cout << "min_y = " << min_y_window[1] << endl;
-			cout << "max_x = " << max_x_window[0] << endl;
-			cout << "max_y = " << max_y_window[1] << endl;*/
+	
 	}
 
 	glUniform1f(glGetUniformLocation(program.programId(), "num_blocks"), blocks.size());

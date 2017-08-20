@@ -29,8 +29,9 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	this->handedness = handedness;
 
 	this->model = new Model();
+	this->activeModel = this->model;
 	if (handedness == right_hand || handedness == both_hands) {
-		this->model->init(user_name, data_path, right_hand);
+		this->model->init(user_name, data_path, right_hand);		
 	}
 	else {
 		this->model->init(user_name, data_path, left_hand);
@@ -67,8 +68,8 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 
 /// @note any initialization that has to be done once GL context is active
 void Worker::init_graphic_resources() {
-	offscreen_renderer.init(camera, model, data_path, true);
-	if (save_rastorized_model) rastorizer.init(camera, model, data_path, false);
+	offscreen_renderer.init(camera, this, data_path, true);
+	if (save_rastorized_model) rastorizer.init(camera, this, data_path, false);
 	sensor_color_texture = new ColorTexture8UC3(camera->width(), camera->height());
 	sensor_depth_texture = new DepthTexture16UC1(camera->width(), camera->height());
 
@@ -175,13 +176,9 @@ void Worker::read_class_names(){
 	for (int i = 0; i < N; ++i) {
 		std::string name;
 		fp >> name;
-		//fscanf(fp, "%s", &name);
 		class_names.push_back(name);
-		std::cout << "one class is: " << name << std::endl;
 	}
 	fp.close();
-	//	fclose(fp);
-	std::cout << "Reading some vecotr for the classifier" << std::endl;
 }
 
 int Worker::classify(){
@@ -207,4 +204,8 @@ int Worker::classify(){
 
 	return class_max;
 
+}
+
+Model* Worker::get_active_model() {
+	return activeModel;
 }

@@ -51,6 +51,7 @@ public:
 	Camera* camera = NULL;
 	Model * model;
 	Model * model2;
+	Model * activeModel;
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -85,4 +86,6 @@ public:
 	int classify();
 	void read_bayes_vectors(std::string , std::string , std::vector<std::vector<float>>&);
 	void read_class_names();
+	//Brandon
+	Model* get_active_model();
 };

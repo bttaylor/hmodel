@@ -6,18 +6,20 @@
 #include "tracker/Data/Camera.h"
 #include "tracker/OpenGL/ConvolutionRenderer/ConvolutionRenderer.h"
 #include "tracker/OpenGL/CustomFrameBuffer.h"
+#include "tracker/Worker.h"
 
-void OffscreenRenderer::init(Camera* camera, Model * model, std::string data_path, bool render_block_id) {
+void OffscreenRenderer::init(Camera* camera, Worker * worker, std::string data_path, bool render_block_id) {
 	this->camera = camera;
-	this->model = model;
+	this->worker = worker;
+	//this->model = model;
 	
 	if (render_block_id) {
 		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
-		convolution_renderer = new ConvolutionRenderer(model, ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);
+		convolution_renderer = new ConvolutionRenderer(worker->get_active_model(), ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);
 	}
 	else { // render_depth
 		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
-		convolution_renderer = new ConvolutionRenderer(model, ConvolutionRenderer::RASTORIZER, camera->view_projection_matrix(), data_path);
+		convolution_renderer = new ConvolutionRenderer(worker->get_active_model(), ConvolutionRenderer::RASTORIZER, camera->view_projection_matrix(), data_path);
 	}
 }
 
@@ -40,7 +42,7 @@ void OffscreenRenderer::render_offscreen(bool last_iter, bool fingers_only, bool
 	convolution_renderer->render_offscreen(fingers_only);
 	frame_buffer->unbind();
 
-	if (last_iter) frame_buffer->fetch_color_attachment(model->silhouette_texture);
+	if (last_iter) frame_buffer->fetch_color_attachment(worker->get_active_model()->silhouette_texture);
 
 	glFinish();
 }

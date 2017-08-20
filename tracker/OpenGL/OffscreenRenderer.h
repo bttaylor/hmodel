@@ -5,12 +5,15 @@
 class OffscreenRenderer{
 protected:
     Camera* camera = NULL;
-	Model * model;	
+	//Brandon
+	Worker* worker;
+	//Model * model;	
 public:
     CustomFrameBuffer* frame_buffer = NULL; 
 	ConvolutionRenderer * convolution_renderer;
 
-    void init(Camera *camera, Model * model, std::string data_path, bool render_block_id);
+	void init(Camera *camera, Worker * worker, std::string data_path, bool render_block_id);
+    //void init(Camera *camera, Model * model, std::string data_path, bool render_block_id);
     void render_offscreen(bool last_iter, bool fingers_only, bool reinit=false);
 	void rastorize_model(cv::Mat & rastorized_model);
 	~OffscreenRenderer();

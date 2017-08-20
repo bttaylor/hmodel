@@ -105,7 +105,8 @@ class ConvolutionRenderer {
 	};
 
 public:
-	enum SHADERMODE { NORMAL, FRAMEBUFFER, RASTORIZER };
+	//Brandon: added additional shadermodes
+	enum SHADERMODE { NORMAL, FRAMEBUFFER, RASTORIZER, TWO_HAND_NORMAL, TWO_HAND_FRAMEBUFFER, TWO_HAND_RASTORIZER };
 
 	int window_left = 0;
 	int window_bottom = 0;
