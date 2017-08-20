@@ -18,7 +18,7 @@
 
 void Worker::updateGL() { if (glarea != NULL) glarea->updateGL(); }
 
-Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, std::string data_path) {
+Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, std::string data_path, Handedness handedness) {
 
 	this->camera = camera;
 	this->benchmark = benchmark;
@@ -26,20 +26,34 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	this->save_rastorized_model = save_rasotrized_model;
 	this->user_name = user_name;
 	this->data_path = data_path;
+	this->handedness = handedness;
 
 	this->model = new Model();
-	this->model->init(user_name, data_path);
+	if (handedness == right_hand || handedness == both_hands) {
+		this->model->init(user_name, data_path, right_hand);
+	}
+	else {
+		this->model->init(user_name, data_path, left_hand);
+	}
 	std::vector<float> theta_initial = std::vector<float>(num_thetas, 0);
-	theta_initial[1] = -70; theta_initial[2] = 400;
+	theta_initial[1] = 70; theta_initial[2] = 400;
 	model->move(theta_initial);
-
 	model->update_centers();
 	model->compute_outline();
+
+	if (handedness == both_hands) {
+		model2 = new Model();  //Right
+		model2->init(user_name, data_path, left_hand);
+		theta_initial[0] = -70;
+		model2->move(theta_initial);
+		model2->update_centers();
+		model2->compute_outline();
+	}
 
 	//Brandon
 	Bayes_mu = std::vector<std::vector<float>>();
 	Bayes_sig = std::vector<std::vector<float>>();
-	std::string path = "C:/Projects/ASLRecog/";
+	std::string path = "C:/Projects/ASLRecog/";			//TODO: Fix this
 	std::string f1 = "mu_params.txt";
 	std::string f2 = "sig_params.txt";
 	std::cout << "gonna read something" << std::endl;
@@ -49,7 +63,6 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	//read_bayes_vectors("C:/Projects/ASLRecog/", "mu_params.txt", Bayes_mu);
 	//read_bayes_vectors("C:/Projects/ASLRecog/", "sig_params.txt", Bayes_sig);
 
-	if (user_name == 0) model->manually_adjust_initial_transformations();
 }
 
 /// @note any initialization that has to be done once GL context is active
@@ -65,7 +78,7 @@ void Worker::init_graphic_resources() {
 	///--- Initialize the energies modules
 	using namespace energy;
 	trivial_detector = new TrivialDetector(camera, &offscreen_renderer);
-	handfinder = new HandFinder(camera);
+	handfinder = new HandFinder(camera, handedness);
 	E_fitting.init(this);
 
 	E_limits.init(model);

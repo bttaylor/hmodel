@@ -46,10 +46,11 @@ Model::~Model() {
 	delete[] rendered_block_ids;
 }
 
-void Model::init(int user_name, std::string data_path) {
+void Model::init(int user_name, std::string data_path, Handedness handedness) {
 	model_type = HMODEL;
 	this->user_name = (UserName)user_name;
 	this->data_path = data_path;	
+	this->handedness = handedness;
 
 	if (model_type == HMODEL_OLD || model_type == HMODEL) {
 		load_model_from_file();
@@ -438,29 +439,48 @@ void Model::write_model(std::string data_path, int frame_number) {
 void Model::load_model_from_file() {
 	blocks.clear();
 
-	std::string model_folder_path = "models/anastasia2/";
-	read_float_matrix(data_path + model_folder_path, "C", centers);
+	std::string model_folder_path = "models/brandon/";
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
 
-	// Read initial transformations
+	if (handedness = right_hand) {
+		read_float_matrix(data_path + model_folder_path, "C_Right", centers);
 
-	FILE *fp = fopen((data_path + model_folder_path + "I.txt").c_str(), "r");
-	int N;
-	fscanf(fp, "%d", &N);
-	for (int i = 0; i < N; ++i) {
-		phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
-		for (size_t u = 0; u < d + 1; u++) {
-			for (size_t v = 0; v < d + 1; v++) {		
-				fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+		// Read initial transformations
+
+		FILE *fp = fopen((data_path + model_folder_path + "I_Right_0717.txt").c_str(), "r");
+		int N;
+		fscanf(fp, "%d", &N);
+		for (int i = 0; i < N; ++i) {
+			phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+			for (size_t u = 0; u < d + 1; u++) {
+				for (size_t v = 0; v < d + 1; v++) {
+					fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+				}
 			}
 		}
+		fclose(fp);
 	}
-	fclose(fp);
+	else {
+		read_float_matrix(data_path + model_folder_path, "C", centers);
 
-	/*for (size_t i = 0; i < centers.size(); i++) {
-		centers[i] += glm::vec3(0, -70, 400);
-		}*/
+		// Read initial transformations
+
+		FILE *fp = fopen((data_path + model_folder_path + "I.txt").c_str(), "r");
+		int N;
+		fscanf(fp, "%d", &N);
+		for (int i = 0; i < N; ++i) {
+			phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+			for (size_t u = 0; u < d + 1; u++) {
+				for (size_t v = 0; v < d + 1; v++) {
+					fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+				}
+			}
+		}
+		fclose(fp);
+
+	}
+
 }
 
 // Inverse kinematics

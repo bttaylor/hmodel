@@ -33,6 +33,7 @@ public:
 	std::vector<std::vector<float>> Bayes_mu;
 	std::vector<std::vector<float>> Bayes_sig;
 	std::vector<std::string> class_names;
+	Handedness handedness;
 
 public:
 	QGLWidget* glarea = NULL;
@@ -49,6 +50,7 @@ public:
 
 	Camera* camera = NULL;
 	Model * model;
+	Model * model2;
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -64,13 +66,14 @@ public:
 	energy::PoseSpace E_pose;
 
 	HandFinder* handfinder = NULL;
+	HandFinder* handfinder2 = NULL;
 	TrivialDetector* trivial_detector = NULL;
 	OffscreenRenderer offscreen_renderer;
 	OffscreenRenderer rastorizer;
 	TrackingMonitor monitor;
 
 public:
-	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path);
+	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path, Handedness handedness);
 	~Worker();
 	void init_graphic_resources(); ///< not in constructor as needs valid OpenGL context
 	void cleanup_graphic_resources();

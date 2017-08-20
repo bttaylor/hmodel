@@ -62,6 +62,9 @@ public:
 	int num_outline_fields = 3;
 	int max_num_outlines = 200;
 
+	//Brandon
+	Handedness handedness;
+
 	std::vector<glm::vec3> centers;
 	std::vector<float> radii;
 	std::vector<glm::ivec3> blocks;
@@ -114,7 +117,7 @@ public:
 	Model();
 	~Model();
 
-	void init(int user_name, std::string data_path);
+	void init(int user_name, std::string data_path, Handedness handedness);
 
 	void initialize_offsets();
 

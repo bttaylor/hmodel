@@ -6,6 +6,9 @@
 
 using namespace std;
 
+//Brandon
+enum Handedness {left_hand, right_hand, both_hands};
+
 typedef float Scalar;
 typedef Scalar Real;
 typedef std::string String;

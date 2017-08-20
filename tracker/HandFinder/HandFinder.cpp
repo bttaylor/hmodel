@@ -14,10 +14,11 @@
 
 #include "tracker/TwSettings.h"
 
-HandFinder::HandFinder(Camera *camera) : camera(camera){
+HandFinder::HandFinder(Camera *camera, Handedness handedness) : camera(camera){
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
 
+	this->handedness = handedness;
     tw_settings->tw_add(settings->show_hand, "show_hand", "group=HandFinder");
     tw_settings->tw_add(settings->show_wband, "show_wband", "group=HandFinder");
     tw_settings->tw_add(settings->wband_size, "wband_size", "group=HandFinder");
@@ -29,7 +30,14 @@ HandFinder::HandFinder(Camera *camera) : camera(camera){
      TwAddVarRW(tw_settings->anttweakbar(), "rgb_max", TW_TYPE_COLOR3F,  &_settings.hsv_max.data, "group=HandFinder");
 #endif
 
-    std::string path = local_file_path("wristband.txt",true/*exit*/);
+	 std::string path;
+	 if (handedness == right_hand) {
+		 path = local_file_path("blue_wristband.txt", true);
+	 }
+	 else {
+		 path = local_file_path("yellow_wristband.txt", true);
+	 }
+    
     if(!path.empty()){
         std::cout << "Reading Wristband Colors from: " << path << std::endl;
         ifstream myfile(path);

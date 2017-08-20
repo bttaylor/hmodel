@@ -9,7 +9,7 @@ private:
     Camera*const camera=NULL;
     TrivialDetector*const trivial_detector=NULL;
 public:
-    HandFinder(Camera * camera);
+    HandFinder(Camera * camera, Handedness handedness);
 	~HandFinder() {
 		delete[] sensor_indicator;
 	}
@@ -37,6 +37,8 @@ public:
 	cv::Mat mask_wristband; ///< created by binary_classifier, not used anywhere else
 	int * sensor_indicator;
 	int num_sensor_points;
+	//Brandon
+	Handedness handedness;
 
 public:
     bool has_useful_data(){ return _has_useful_data; }

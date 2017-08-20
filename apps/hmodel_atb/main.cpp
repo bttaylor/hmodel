@@ -19,33 +19,39 @@ int main(int argc, char* argv[]) {
 
 	bool benchmark = false;
 	bool playback = false;
-	int user_name = 0;
+	int user_name = 10;
+	bool myoEnable = true;
 
-	//myo::Hub hub("taylor.com.text");
-	//myo::Myo* myo = hub.waitForMyo(10000);
-	//DataCollector collector = DataCollector();
+	DataCollector collector = DataCollector();
+	myo::Hub hub("taylor.com.text");
+	if (myoEnable){
+		myo::Myo* myo = hub.waitForMyo(10000);
+		//DataCollector collector = DataCollector();
 
-	//if (!myo){
-	//	std::cout << "Unable to find a Myo!";
-	//}
+		if (!myo) {
+			std::cout << "Unable to find a Myo!";
+		}
 
-	//myo->setStreamEmg(myo::Myo::streamEmgEnabled);
-	//hub.addListener(&collector);
+		myo->setStreamEmg(myo::Myo::streamEmgEnabled);
+		hub.addListener(&collector);
 
+	}
+
+	Handedness handedness = left_hand;
 	std::string sequence_path = "C:/Projects/Data/";
-	std::string data_path = "C:/Projects/clean0426/hmodel-master/data/";
+	std::string data_path = "C:/Projects/MyoFaceVersion/hmodel/data/";
 	std::string sequence_name = "Participant33";
 
 	Q_INIT_RESOURCE(shaders);
 	QApplication app(argc, argv);
 
 	Camera camera(QVGA, 60);
-	SensorRealSense sensor(&camera, real_color);
+	SensorRealSense sensor(&camera, real_color, handedness);
 
 	DataStream datastream(&camera);
 	SolutionStream solutions;
 
-	Worker worker(&camera, test, benchmark, save_rastorized_model, user_name, data_path);
+	Worker worker(&camera, test, benchmark, save_rastorized_model, user_name, data_path, handedness);
 
 	{
 		worker.settings->termination_max_iters = 8;
