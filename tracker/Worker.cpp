@@ -44,34 +44,13 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	model->update_centers();
 	model->compute_outline();
 
-<<<<<<< HEAD
-	//this->model2 = new Model();
-	//this->model2->init(user_name, data_path);
-	//std::vector<float> theta_initial = std::vector<float>(num_thetas, 0);
-	//theta_initial[1] = +70; theta_initial[2] = 400;
-	//model2->move(theta_initial);
-
-	//model2->update_centers();
-	//model2->compute_outline();
-
-	//Brandon
-=======
->>>>>>> refs/remotes/origin/master
 	Bayes_mu = std::vector<std::vector<float>>();
 	Bayes_sig = std::vector<std::vector<float>>();
 	std::string path = "C:/Projects/ASLRecog/";
 	std::string f1 = "mu_params.txt";
 	std::string f2 = "sig_params.txt";
-<<<<<<< HEAD
-	std::cout << "gonna read something" << std::endl;
-	read_bayes_vectors(path, f1, Bayes_mu);
-	read_bayes_vectors(path, f2, Bayes_sig);
-	read_class_names();
-	//read_bayes_vectors("C:/Projects/ASLRecog/", "mu_params.txt", Bayes_mu);
-	//read_bayes_vectors("C:/Projects/ASLRecog/", "sig_params.txt", Bayes_sig);
 
 	lock_tracking = true;
-=======
 	read_bayes_vectors(path, f1, Bayes_mu);
 	read_bayes_vectors(path, f2, Bayes_sig);
 	read_class_names();
@@ -84,7 +63,6 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 		model2->update_centers();
 		model2->compute_outline();
 	}
->>>>>>> refs/remotes/origin/master
 
 	if (user_name == 0) model->manually_adjust_initial_transformations();
 	//if (user_name == 0) model2->manually_adjust_initial_transformations();
@@ -92,11 +70,7 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 
 /// @note any initialization that has to be done once GL context is active
 void Worker::init_graphic_resources() {
-<<<<<<< HEAD
-	//offscreen_renderer.init(camera, model, model2, data_path, true);
-	offscreen_renderer.init(camera, model, data_path, true);
-	//if (save_rastorized_model) rastorizer.init(camera, model, model2, data_path, false);
-=======
+
 	if (handedness == both_hands) {
 		offscreen_renderer.init(camera, model, data_path, true,handedness,model2);
 	}
@@ -104,7 +78,7 @@ void Worker::init_graphic_resources() {
 		offscreen_renderer.init(camera, model, data_path, true, handedness, model2);
 		//offscreen_renderer.init(camera, model, data_path, true);
 	}
->>>>>>> refs/remotes/origin/master
+
 	if (save_rastorized_model) rastorizer.init(camera, model, data_path, false);
 	sensor_color_texture = new ColorTexture8UC3(camera->width(), camera->height());
 	sensor_depth_texture = new DepthTexture16UC1(camera->width(), camera->height());
@@ -115,10 +89,6 @@ void Worker::init_graphic_resources() {
 	///--- Initialize the energies modules
 	using namespace energy;
 	trivial_detector = new TrivialDetector(camera, &offscreen_renderer);
-<<<<<<< HEAD
-	handfinder = new HandFinder(camera);
-	R_Handfinder = new HandFinder(camera);
-=======
 
 	if (handedness == both_hands) {
 		handfinder = new HandFinder(camera, left_hand);
@@ -133,7 +103,6 @@ void Worker::init_graphic_resources() {
 	if (!(handfinder == NULL)) cout << "handfinder not NULL" << endl;
 	if (!(handfinder2 == NULL)) cout << "handfinder2 not NULL" << endl;
 	
->>>>>>> refs/remotes/origin/master
 	E_fitting.init(this);
 
 	E_limits.init(model);
@@ -163,49 +132,10 @@ Worker::~Worker() {
 	//delete model2;
 }
 
-<<<<<<< HEAD
-void Worker::toggle_tracking_lock(){
+void Worker::toggle_tracking_lock() {
 	lock_tracking = !lock_tracking;
 }
 
-/*
-bool Worker::track_till_convergence(int model_num) {
-	//Brandon did this to disable tracking.
-	if (lock_tracking) return false;
-
-	if (model_num == 1){
-		for (int i = 0; i < settings->termination_max_iters; ++i) {
-			track(i,model,1);
-			//tracking_error_optimization[i] = tracking_error;
-		}
-
-		return monitor.is_failure_frame(tracking_error.pull_error, tracking_error.push_error, E_fitting.settings->fit2D_enable);
-	}
-	else{
-		for (int i = 0; i < settings->termination_max_iters; ++i) {
-			track(i,model2,2);
-			//tracking_error_optimization[i] = tracking_error;
-		}
-
-		return monitor.is_failure_frame(tracking_error.pull_error, tracking_error.push_error, E_fitting.settings->fit2D_enable);
-
-	}
-}*/
-
-
-bool Worker::track_till_convergence() {
-	//Brandon did this to disable tracking.
-	if (lock_tracking) {
-		std::vector<float> _thetas = model->get_theta();
-		for (int i = 6; i < num_thetas; ++i){
-			_thetas[i] = 0;
-		}
-		model->compute_rendered_indicator(this->handfinder->sensor_silhouette, this->camera);
-		model->move(_thetas);
-		model->update_centers();
-		model->compute_outline();
-		return true; //false;
-=======
 void Worker::swap_hands() {
 	if (handedness == right_hand)
 		handedness = left_hand;
@@ -244,7 +174,6 @@ bool Worker::track_till_convergence() {
 	if (handfinder->sensor_silhouette.empty()) {
 		cout << "empty sensor_silhouette in track_till_convergence" << endl;
 		return true;
->>>>>>> refs/remotes/origin/master
 	}
 	for (int i = 0; i < settings->termination_max_iters; ++i) {
 		track(i);
@@ -267,25 +196,11 @@ void Worker::track(int iter){
 
 	///--- Optimization phases	
 	LinearSystem system(num_thetas);
-<<<<<<< HEAD
-	//eval_error = true;
-	
-		E_fitting.track(current_frame, system, rigid_only, eval_error, tracking_error.push_error, tracking_error.pull_error, iter); ///<!!! MUST BE FIRST CALL		
-		E_collision.track(system);
-		E_temporal.track(system, current_frame);
-		E_limits.track(system, _thetas);
-		E_damping.track(system);
-		if (rigid_only)
-			energy::Energy::rigid_only(system);
-		else
-			E_pose.track(system, _thetas); ///<!!! MUST BE LAST CALL	
-	
-	
-=======
+
 
 	E_fitting.track(current_frame, system, rigid_only, eval_error, tracking_error.push_error, tracking_error.pull_error, iter); ///<!!! MUST BE FIRST CALL		
 	E_collision.track(system);
-	//E_temporal.track(system, current_frame);
+	E_temporal.track(system, current_frame);
 	E_limits.track(system, _thetas);
 	E_damping.track(system);
 	if (rigid_only)
@@ -293,7 +208,6 @@ void Worker::track(int iter){
 	else	
 		E_pose.track(system, _thetas); ///<!!! MUST BE LAST CALL	
 
->>>>>>> refs/remotes/origin/master
 	///--- Solve 
 	VectorN delta_thetas = energy::Energy::solve(system);
 
@@ -301,30 +215,14 @@ void Worker::track(int iter){
 	const vector<float> dt(delta_thetas.data(), delta_thetas.data() + num_thetas);
 
 	_thetas = model->get_updated_parameters(_thetas, dt);
-<<<<<<< HEAD
-//	if (model_num == 2){
-//		_thetas[0] = _thetas[0] + 100;
-//	}
-=======
 
->>>>>>> refs/remotes/origin/master
 	model->move(_thetas);
 	model->update_centers();
 	model->compute_outline();
 	E_temporal.update(current_frame.id, _thetas);
 }
 
-<<<<<<< HEAD
-/*
-void Worker::track(int iter, Model* model, int model_num) {
-	bool eval_error = (iter == settings->termination_max_iters - 1);
-	bool rigid_only = (iter < settings->termination_max_rigid_iters);
 
-	std::vector<float> _thetas = model->get_theta();
-
-	///--- Serialize matrices for jacobian computation
-	model->serializer.serialize_model();
-=======
 void Worker::track2(int iter) {
 	bool eval_error = (iter == settings->termination_max_iters - 1);
 	bool rigid_only = (iter < settings->termination_max_rigid_iters);
@@ -332,37 +230,11 @@ void Worker::track2(int iter) {
 	std::vector<float> _thetas = model2->get_theta();
 	///--- Serialize matrices for jacobian computation
 	model2->serializer.serialize_model();
->>>>>>> refs/remotes/origin/master
 	//model->compute_rendered_indicator(handfinder->sensor_silhouette, camera);
 
 	///--- Optimization phases	
 	LinearSystem system(num_thetas);
-<<<<<<< HEAD
-	//eval_error = true;
-	if (model_num == 1){
-		E_fitting.track(current_frame, system, rigid_only, eval_error, tracking_error.push_error, tracking_error.pull_error, iter); ///<!!! MUST BE FIRST CALL		
-		E_collision.track(system);
-		E_temporal.track(system, current_frame);
-		E_limits.track(system, _thetas);
-		E_damping.track(system);
-		if (rigid_only)
-			energy::Energy::rigid_only(system);
-		else
-			E_pose.track(system, _thetas); ///<!!! MUST BE LAST CALL	
-	}
-	else{
-		E_fitting2.track(current_frame, system, rigid_only, eval_error, tracking_error.push_error, tracking_error.pull_error, iter); ///<!!! MUST BE FIRST CALL		
-		E_collision2.track(system);
-		E_temporal2.track(system, current_frame);
-		E_limits2.track(system, _thetas);
-		E_damping2.track(system);
-		if (rigid_only)
-			energy::Energy::rigid_only(system);
-		else
-			E_pose2.track(system, _thetas); ///<!!! MUST BE LAST CALL	
-	}
-	///--- Solve 
-=======
+
 	E_fitting.track(current_frame, system, rigid_only, eval_error, tracking_error.push_error, tracking_error.pull_error, iter, 2); ///<!!! MUST BE FIRST CALL		
 
 																																//std::cout << "2: " << eval_error << tracking_error.push_error << tracking_error.pull_error << std::endl;
@@ -382,33 +254,10 @@ void Worker::track2(int iter) {
 		E_pose.track(system, _thetas); ///<!!! MUST BE LAST CALL	
 
 									   ///--- Solve 
->>>>>>> refs/remotes/origin/master
 	VectorN delta_thetas = energy::Energy::solve(system);
 
 	///--- Update
 	const vector<float> dt(delta_thetas.data(), delta_thetas.data() + num_thetas);
-<<<<<<< HEAD
-	_thetas = model->get_updated_parameters(_thetas, dt);
-	if (model_num == 2){
-		_thetas[0] = _thetas[0] + 100;
-	}
-	model->move(_thetas);
-	model->update_centers();
-	model->compute_outline();
-	E_temporal.update(current_frame.id, _thetas);
-}*/
-
-void Worker::read_bayes_vectors(std::string data_path, std::string name, std::vector<std::vector<float>> & input) {
-	//std::cout << "opening: " << data_path << name << std::endl;
-	FILE *fp = fopen((data_path + name ).c_str(), "r");
-	int N = 41;
-
-	//fscanf(fp, "%d", &N);
-	for (int i = 0; i < N; ++i) {
-		std::vector<float> theta = std::vector<float>();
-		for (int j = 0; j < 20; ++j){
-=======
-
 	_thetas = model2->get_updated_parameters(_thetas, dt);
 
 	model2->move(_thetas);
@@ -424,62 +273,11 @@ void Worker::read_bayes_vectors(std::string data_path, std::string name, std::ve
 	for (int i = 0; i < N; ++i) {
 		std::vector<float> theta = std::vector<float>();
 		for (int j = 0; j < 20; ++j) {
->>>>>>> refs/remotes/origin/master
 			float a;
 			fscanf(fp, "%f", &a);
 			theta.push_back(a);
 		}
 		input.push_back(theta);
-<<<<<<< HEAD
-		//std::cout << "one value is: " << theta[3] << std::endl;
-	}
-	fclose(fp);
-	//std::cout << "Reading some vecotr for the classifier" << std::endl;
-}
-
-void Worker::read_class_names(){
-	std::string data_path = "C:/Projects/ASLRecog/classes.txt";
-	std::ifstream fp("C:/Projects/ASLRecog/classes.txt");
-	//FILE *fp = fopen((data_path).c_str(), "r");
-	int N = 41;
-
-	//fscanf(fp, "%d", &N);
-	for (int i = 0; i < N; ++i) {
-		std::string name;
-		fp >> name;
-		//fscanf(fp, "%s", &name);
-		class_names.push_back(name);
-		//std::cout << "one class is: " << name << std::endl;
-	}
-	fp.close();
-	//	fclose(fp);
-	//std::cout << "Reading some vecotr for the classifier" << std::endl;
-}
-
-int Worker::classify(){
-//void calc_max_likelihood(std::vector<float> theta){
-	int N = 41;
-	int class_max = 0;
-	float max_likelihood = -999999;
-	float likelihood = 0;
-	for (int i = 0; i < N; ++i){
-		likelihood = 0;
-		for (int j = 0; j < 20; ++j){			
-			likelihood += -.5*log(2 * M_PI * Bayes_sig[i][j]) - (model->theta[j+9] - Bayes_mu[i][j])*(model->theta[j+9] - Bayes_mu[i][j]) / (2 * Bayes_sig[i][j]);
-		}
-		if (i == 0)
-			max_likelihood = likelihood;
-		if (likelihood > max_likelihood){			
-			max_likelihood = likelihood;
-			class_max = i;
-		}
-		//std::cout << "Class " << i << " likelihood: " << likelihood << std::endl;
-	}
-	//std::cout << "Most likely Class: " << class_names[class_max] << std::endl;
-
-	return class_max;
-
-=======
 	}
 	fclose(fp);
 }
@@ -514,5 +312,4 @@ int Worker::classify() {
 		}
 	}
 	return class_max;
->>>>>>> refs/remotes/origin/master
 }

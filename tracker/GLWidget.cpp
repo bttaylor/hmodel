@@ -191,15 +191,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 	case Qt::Key_Escape: {
 		this->close();
 	}
-<<<<<<< HEAD
-	break;
-	case Qt::Key_C: {
-		int hs_class = worker->classify();
-		cout << "Most likely class: " << worker->class_names[hs_class] << std::endl;
-	}
-=======
 		break;
->>>>>>> refs/remotes/origin/master
 	case Qt::Key_S: {
 						cout << "set up path for saving images" << std::endl;
 						datastream->save_as_images("C:/Projects/test/");
@@ -385,19 +377,6 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		}
 	}
 	break;
-<<<<<<< HEAD
-	case Qt::Key_9: {
-		if (!worker->lock_tracking){
-			cout << "Stopping the tracking" << std::endl;
-		}
-		else{
-			cout << "Restarting tracking" << std::endl;
-		}
-
-		worker->toggle_tracking_lock();
-	}
-	break;
-=======
 	case Qt::Key_B: {
 		if (worker->joint_min) {
 			for (int i = 0; i < worker->model->phalanges[0].offsets.size(); i++) {
@@ -409,7 +388,6 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 				worker->model->phalanges[0].offsets[i](0) *= .95;
 			}
 		}
->>>>>>> refs/remotes/origin/master
 	}
 	break;
 	case Qt::Key_N: {		

@@ -56,38 +56,6 @@ public:
 	bool tracking_enabled = true;
 	bool verbose = false;
 
-<<<<<<< HEAD
-	//Brandon
-
-	FACETRACKER::Tracker model;
-	cv::Mat tri;
-	cv::Mat con;
-	//static std::vector<std::vector<float>> Bayes_mu;
-	//static std::vector<std::vector<float>> Bayes_sig;
-
-
-public:
-	Tracker(Worker*worker, double FPS, std::string data_path, bool real_color) : worker(worker), hub(hub), model("C:/Developer/FaceTracker-opencv2/model/face2.tracker") {
-		setSingleShot(false);
-		setInterval((1.0 / FPS)*1000.0);
-		this->data_path = data_path;
-		this->real_color = real_color;
-		tw_settings->tw_add_ro(current_fps, "FPS", "group=Tracker");
-		tw_settings->tw_add(initialization_enabled, "Detect ON?", "group=Tracker");
-		tw_settings->tw_add(tracking_enabled, "ArtICP ON?", "group=Tracker");
-		tw_settings->tw_add_ro(tracking_failed, "Tracking Lost?", "group=Tracker");
-
-		//Bayes_mu = std::vector<std::vector<float>>();
-		//Bayes_sig = std::vector<std::vector<float>>();
-		cvNamedWindow("Face Tracker", 1);
-
-		tri = FACETRACKER::IO::LoadTri("C:/Developer/FaceTracker-opencv2/model/face.tri");
-		con = FACETRACKER::IO::LoadCon("C:/Developer/FaceTracker-opencv2/model/face.con");
-		//model(ftFile);
-	}
-		
-	Tracker(Worker*worker, myo::Hub* hub, double FPS, std::string data_path, bool real_color) : worker(worker), hub(hub) {
-=======
 	//Brandon Joint Test Mods
 	FACETRACKER::Tracker facemodel;
 	cv::Mat faceTri;
@@ -99,7 +67,6 @@ public:
 public:
 	Tracker(Worker*worker, myo::Hub* hub, double FPS, std::string data_path, bool real_color) : worker(worker), hub(hub),
 		facemodel("C:/Developer/FaceTracker-opencv2/model/face2.tracker") {
->>>>>>> refs/remotes/origin/master
 		setSingleShot(false);
 		setInterval((1.0 / FPS)*1000.0);
 		this->data_path = data_path;
@@ -109,14 +76,9 @@ public:
 		tw_settings->tw_add(tracking_enabled, "ArtICP ON?", "group=Tracker");
 		tw_settings->tw_add_ro(tracking_failed, "Tracking Lost?", "group=Tracker");
 
-<<<<<<< HEAD
-		//Bayes_mu = std::vector<std::vector<float>>();
-		//Bayes_sig = std::vector<std::vector<float>>();
-=======
 		cvNamedWindow("Face Tracker", 1);
 		faceTri = FACETRACKER::IO::LoadTri("C:/Developer/FaceTracker-opencv2/model/face.tri");
 		faceCon = FACETRACKER::IO::LoadCon("C:/Developer/FaceTracker-opencv2/model/face.con");
->>>>>>> refs/remotes/origin/master
 	}
 
 	void toggle_tracking(bool on) {
@@ -144,8 +106,10 @@ public:
 	}
 private:
 	void timerEvent(QTimerEvent*) {
+		cout << "tracker.h timerEvent" << endl;
 		process_track();
-		process_face();
+		cout << "finished process_track()" << endl;
+		//process_face();
 		//compute_initial_transformations();
 	}
 
@@ -153,13 +117,8 @@ public:
 
 	int speedup = 1;
 
-<<<<<<< HEAD
-	void process_face(){		
-		cv::Mat im,gray;
-=======
 	void process_face() {
 		cv::Mat im, gray;
->>>>>>> refs/remotes/origin/master
 		cv::Mat frame = worker->current_frame.color;
 		float scale = 1;
 		int64 t1, t0 = cvGetTickCount(); int fnum = 0;
@@ -172,50 +131,8 @@ public:
 		bool failed = true;
 		int fpd = -1;
 		bool fcheck = false;
-<<<<<<< HEAD
-
+		
 		//IplImage* I = cvQueryFrame(worker->camera); if (!I)continue; frame = I;
-		if (scale == 1)im = frame;
-		else cv::resize(frame, im, cv::Size(scale*frame.cols, scale*frame.rows));
-		cv::flip(im, im, 1); 
-		cv::cvtColor(im, gray, CV_BGR2GRAY);
-
-		//track this image
-		
-		std::vector<int> wSize; 
-		if (failed)
-			wSize = wSize2; 
-		else 
-			wSize = wSize1;
-		if (model.Track(gray, wSize, fpd, nIter, clamp, fTol, fcheck) == 0){
-			int idx = model._clm.GetViewIdx(); failed = false;
-			Draw(im, model._shape, con, tri, model._clm._visi[idx]);
-		}
-		else{
-			if (show){
-				cv::Mat R(im, cvRect(0, 0, 150, 50)); 
-				R = cv::Scalar(0, 0, 255); 
-			}
-			model.FrameReset(); failed = true;
-		}
-		
-		
-		//draw framerate on display image 
-		if (fnum >= 9){
-			t1 = cvGetTickCount();
-			fps = 10.0 / ((double(t1 - t0) / cvGetTickFrequency()) / 1e+6);
-			t0 = t1; fnum = 0;
-		}
-		else fnum += 1;
-		//if (show){
-			sprintf(sss, "%d frames/sec", (int)round(fps)); text = sss;
-			cv::putText(im, text, cv::Point(10, 20),
-				CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 255, 255));
-			//std::cout << text << " im.w: " << im.cols << " im.r: " << im.rows << std::endl;
-		//}
-=======
-		
-					//IplImage* I = cvQueryFrame(worker->camera); if (!I)continue; frame = I;
 		if (scale == 1)
 			im = frame;
 		else 
@@ -258,25 +175,10 @@ public:
 			//std::cout << text << " im.w: " << im.cols << " im.r: " << im.rows << std::endl;
 		//}
 
->>>>>>> refs/remotes/origin/master
 		//show image and check for user input
 		imshow("Face Tracker", im);
 		//int c = cvWaitKey(10);
 		//if (c == 27)break; else if (char(c) == 'd')model.FrameReset();
-<<<<<<< HEAD
-	}
-
-	void Draw(cv::Mat &image, cv::Mat &shape, cv::Mat &con, cv::Mat &tri, cv::Mat &visi)
-	{
-		int i, n = shape.rows / 2; cv::Point p1, p2; cv::Scalar c;
-
-		//draw triangulation
-		c = CV_RGB(0, 0, 0);
-		for (i = 0; i < tri.rows; i++){
-			if (visi.at<int>(tri.at<int>(i, 0), 0) == 0 ||
-				visi.at<int>(tri.at<int>(i, 1), 0) == 0 ||
-				visi.at<int>(tri.at<int>(i, 2), 0) == 0)continue;
-=======
 			
 	}
 	
@@ -290,7 +192,6 @@ public:
 				visi.at<int>(tri.at<int>(i, 1), 0) == 0 ||
 				visi.at<int>(tri.at<int>(i, 2), 0) == 0)continue;
 			
->>>>>>> refs/remotes/origin/master
 			p1 = cv::Point(shape.at<double>(tri.at<int>(i, 0), 0),
 				shape.at<double>(tri.at<int>(i, 0) + n, 0));
 			p2 = cv::Point(shape.at<double>(tri.at<int>(i, 1), 0),
@@ -306,18 +207,11 @@ public:
 			p2 = cv::Point(shape.at<double>(tri.at<int>(i, 1), 0),
 				shape.at<double>(tri.at<int>(i, 1) + n, 0));
 			cv::line(image, p1, p2, c);
-<<<<<<< HEAD
-		}
-		//draw connections
-		c = CV_RGB(0, 0, 255);
-		for (i = 0; i < con.cols; i++){
-=======
 			
 		}
 				//draw connections
 			c = CV_RGB(0, 0, 255);
 		for (i = 0; i < con.cols; i++) {
->>>>>>> refs/remotes/origin/master
 			if (visi.at<int>(con.at<int>(0, i), 0) == 0 ||
 				visi.at<int>(con.at<int>(1, i), 0) == 0)continue;
 			p1 = cv::Point(shape.at<double>(con.at<int>(0, i), 0),
@@ -325,16 +219,6 @@ public:
 			p2 = cv::Point(shape.at<double>(con.at<int>(1, i), 0),
 				shape.at<double>(con.at<int>(1, i) + n, 0));
 			cv::line(image, p1, p2, c, 1);
-<<<<<<< HEAD
-		}
-		//draw points
-		for (i = 0; i < n; i++){
-			if (visi.at<int>(i, 0) == 0)continue;
-			p1 = cv::Point(shape.at<double>(i, 0), shape.at<double>(i + n, 0));
-			c = CV_RGB(255, 0, 0); cv::circle(image, p1, 2, c);
-		}return;
-	}
-=======
 			
 		}
 				//draw points
@@ -345,7 +229,6 @@ public:
 			
 		}return;
 		}
->>>>>>> refs/remotes/origin/master
 
 	void process_track() {
 		//compare(); return;
@@ -367,16 +250,19 @@ public:
 		{
 			if (mode == LIVE) {
 
-<<<<<<< HEAD
-				//hub->run(1000 / 100);
-=======
+				if (myoEnable)
+					cout << "MYO iS ON" << endl;
 				if(myoEnable)
 					hub->run(1000 / 100);
->>>>>>> refs/remotes/origin/master
+
 				//bool success = sensor->fetch_streams(worker->current_frame);		
 				//worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
 				//std::cout << "calling sensor->concurrent_fetch_streams" << std::endl;
 				bool success = sensor->concurrent_fetch_streams(worker->current_frame, *worker->handfinder, worker->model->real_color);
+				if (success)
+					cout << "successful concurent_fetch_stream" << endl;
+				else
+					cout << "bad concurrent_fetch" << endl;
 				//if (success){  //Brandon 2 hand mod
 				//	worker->model2->real_color = worker->model->real_color;
 				//}
@@ -482,10 +368,7 @@ public:
 
 		//TICTOC_BLOCK(tracking_time, "Tracking")
 		{
-<<<<<<< HEAD
-			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
-			//tracking_failed2 = tracking_enabled ? worker->track_till_convergence(2) : true;
-=======
+
 
 			if (false) {
 				//Set joints as I please.
@@ -559,7 +442,6 @@ public:
 				//cout << " model2 X: " << thetas[0] << endl;
 				//std::cout << "push error: " << worker->tracking_error.push_error << " pull error: " << worker->tracking_error.pull_error << std::endl;
 			}
->>>>>>> refs/remotes/origin/master
 		}
 
 		float tracking = std::clock() - start; if (verbose) cout << "tracking = " << tracking - sensor << endl;

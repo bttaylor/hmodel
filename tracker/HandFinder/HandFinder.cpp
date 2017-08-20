@@ -14,17 +14,11 @@
 
 #include "tracker/TwSettings.h"
 
-<<<<<<< HEAD
-HandFinder::HandFinder(Camera *camera): HandFinder(camera,1) {
-}
 
-HandFinder::HandFinder(Camera *camera, int _color) : camera(camera){
-=======
 HandFinder::HandFinder(Camera *camera, int handedness) : camera(camera){
->>>>>>> refs/remotes/origin/master
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
-	this->_settings.color = _color;
+	//this->_settings.color = _color;
     tw_settings->tw_add(settings->show_hand, "show_hand", "group=HandFinder");
     tw_settings->tw_add(settings->show_wband, "show_wband", "group=HandFinder");
     tw_settings->tw_add(settings->wband_size, "wband_size", "group=HandFinder");
@@ -35,25 +29,13 @@ HandFinder::HandFinder(Camera *camera, int handedness) : camera(camera){
      TwAddVarRW(tw_settings->anttweakbar(), "rgb_min", TW_TYPE_COLOR3F,  &_settings.hsv_min.data, "group=HandFinder");
      TwAddVarRW(tw_settings->anttweakbar(), "rgb_max", TW_TYPE_COLOR3F,  &_settings.hsv_max.data, "group=HandFinder");
 #endif
-<<<<<<< HEAD
 
-	 std::string path;
-	 if (_settings.color == 1){
-		 path = local_file_path("yellow_wristband.txt", true/*exit*/);
-	 }
-	 else if (_settings.color == 2){
-		 path = local_file_path("blue_wristband.txt", true/*exit*/);
-	 }
-	 else{
-		 path = local_file_path("wristband.txt", true/*exit*/);
-=======
 	 std::string path;
 	 if (handedness == 1){  //1 = Right == Blue
 		 path = local_file_path("blue_wristband.txt", true/*exit*/);  //Testing with yellow reversed
 	 }
 	 else{
 		 path = local_file_path("yellow_wristband.txt", true/*exit*/);
->>>>>>> refs/remotes/origin/master
 	 }
     if(!path.empty()){
         std::cout << "Reading Wristband Colors from: " << path << std::endl;
@@ -153,12 +135,8 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color, int frame
     }
 	
 	if (_settings.show_wband) {
-<<<<<<< HEAD
-		cv::imshow(name + "show_wband", mask_wristband);
-=======
-		cv::imwrite("../test/wristband" + std::to_string(frame_num) + ".png", mask_wristband);
+		//cv::imwrite("../test/wristband" + std::to_string(frame_num) + ".png", mask_wristband);
 		cv::imshow("show_wband", mask_wristband);
->>>>>>> refs/remotes/origin/master
 		cv::waitKey(1);
 	}		
     else
@@ -268,16 +246,10 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color, int frame
             }
         }
     }
-<<<<<<< HEAD
-
-    if(_settings.show_hand){
-        cv::imshow(name + "show_hand", sensor_silhouette);
-=======
 	
 	if (_settings.show_hand){
-		cv::imwrite("../test/hand" + std::to_string(frame_num) + ".png", sensor_silhouette);
+		//cv::imwrite("../test/hand" + std::to_string(frame_num) + ".png", sensor_silhouette);
         cv::imshow("show_hand", sensor_silhouette);
->>>>>>> refs/remotes/origin/master
     } else {
         cv::destroyWindow(name + "show_hand");
     }

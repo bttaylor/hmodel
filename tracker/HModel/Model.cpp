@@ -450,56 +450,9 @@ void Model::load_model_from_file() {
 
 	//std::string model_folder_path = "models/brandon/";
 	std::string model_folder_path = "models/anastasia/";
-<<<<<<< HEAD
-	//read_float_matrix("C:/Projects/clean0426/hmodel-master/data/models/anastasia/","C",centers);
-	read_float_matrix(data_path + model_folder_path, "C", centers);
-	/*for (int i = 0; i < centers.size(); ++i){
-		//std::cout << "center " << i << " x: " << centers[i].x << " y: " << centers[i].y << std::endl;
-		if (i < 4){
-			centers[i].x += -20;
-		}
-		if (i == 28)
-			centers[i].x += -20;
-	}*/
-	//centers[0].x = 45.0;
-	//centers[0].y = 200;
-=======
->>>>>>> refs/remotes/origin/master
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
 
-
-<<<<<<< HEAD
-	//FILE *fp = fopen("C:/Projects/clean0426/hmodel-master/data/models/anastasia2/I.txt", "r");
-	FILE *fp = fopen((data_path + model_folder_path + "I.txt").c_str(), "r");
-	int N;
-	fscanf(fp, "%d", &N);
-	for (int i = 0; i < N; ++i) {
-		phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
-		for (size_t u = 0; u < d + 1; u++) {
-			for (size_t v = 0; v < d + 1; v++) {
-				fscanf(fp, "%f", &phalanges[i].init_local(v, u));
-			}
-		}
-		/*
-		if (i == 5){
-			//phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
-			phalanges[i].init_local(0, 0) = .7071;
-			phalanges[i].init_local(0, 1) = .7071;
-			phalanges[i].init_local(1, 1) = .7071;
-			phalanges[i].init_local(1, 0) = -.7071;
-		}
-		if (i == 6){
-			phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
-			phalanges[i].init_local(0, 0) = .7071;
-			phalanges[i].init_local(0, 1) = -.7071;
-			phalanges[i].init_local(1, 1) = .7071;
-			phalanges[i].init_local(1, 0) = .7071;
-			phalanges[i].init_local(2, 2) = 1;
-			phalanges[i].init_local(3, 3) = 1;
-			phalanges[i].init_local(1, 3) = 19;  //length?
-		}*/
-=======
 	if (handedness == 1){  //1 = Right
 
 		read_float_matrix(data_path + model_folder_path, "C_Right", centers);
@@ -534,7 +487,6 @@ void Model::load_model_from_file() {
 			}
 		}
 		fclose(fp);
->>>>>>> refs/remotes/origin/master
 	}
 
 	/*for (size_t i = 0; i < centers.size(); i++) {
@@ -647,19 +599,12 @@ void Model::move(const std::vector<float> & theta) {
 		if (dofs[i].phalange_id < num_phalanges && dofs[i].type == ROTATION_AXIS) {
 			if (dofs[i].axis == Vec3f(1, 0, 0) || dofs[i].axis == Vec3f(-1, 0, 0))
 				rotateX[i] = theta[i];
-<<<<<<< HEAD
-			else if (dofs[i].axis == Vec3f(0, 1, 0))
-				rotateY[i] = theta[i];
-			else if (dofs[i].axis == Vec3f(0, 0, 1))
-				rotateZ[i] = theta[i];  
-=======
 			else if (dofs[i].axis == Vec3f(0, 1, 0) || dofs[i].axis == Vec3f(0, -1, 0)){
 			//std::cout << "Y-Axis rotation. for phalange? theta = " << theta[i] << " i: " << i << std::endl;
 			rotateY[i] = theta[i];   //Right hand test
 			}
 			else if (dofs[i].axis == Vec3f(0, 0, 1) || dofs[i].axis == Vec3f(0, 0, -1))
 				rotateZ[i] = theta[i];   //Right hand test
->>>>>>> refs/remotes/origin/master
 			else
 				cout << "wrong axis" << endl;
 
@@ -684,13 +629,9 @@ void Model::move(const std::vector<float> & theta) {
 	//transform joints separately
 	//std::cout << "transform_joints(globals)" << std::endl;
 	transform_joints(globals); // pose	
-<<<<<<< HEAD
-	transform_joints(rotateX); // flexion   
-=======
 	//std::cout << "transform_joints(rotateX)" << std::endl;
 	transform_joints(rotateX); // flexion
 	//std::cout << "transform_joints(rotateZ)" << std::endl;
->>>>>>> refs/remotes/origin/master
 	transform_joints(rotateZ); // abduction
 	//std::cout << "transform_joints(rotateY)" << std::endl;
 	transform_joints(rotateY); // twist
@@ -852,12 +793,7 @@ Mat3f Model::build_rotation_matrix(Vec3f euler_angles) {
 	return Rz * Ry * Rx;
 }
 
-<<<<<<< HEAD
-void Model::manually_adjust_initial_transformations() {
-	std::cout << "Manually Adjusting Initial Transformations()" << std::endl;
-=======
 void Model::manually_adjust_initial_transformations() {	
->>>>>>> refs/remotes/origin/master
 	Mat3f R;
 	// thumb
 	R = build_rotation_matrix(Vec3f(-1.45, 0.6, -1.95));  

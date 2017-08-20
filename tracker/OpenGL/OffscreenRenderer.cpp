@@ -31,11 +31,6 @@ void OffscreenRenderer::init(Camera* camera, Model * model, std::string data_pat
 	this->camera = camera;
 	this->model = model;
 
-<<<<<<< HEAD
-	if (render_block_id) {
-		frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
-		convolution_renderer = new ConvolutionRenderer(model, ConvolutionRenderer::FRAMEBUFFER, camera->view_projection_matrix(), data_path);
-=======
 	this->handedness = handedness;
 	if (handedness == both_hands) {
 		this->model2 = model2;
@@ -48,7 +43,6 @@ void OffscreenRenderer::init(Camera* camera, Model * model, std::string data_pat
 			frame_buffer = new CustomFrameBuffer(camera->width(), camera->height(), render_block_id);
 			convolution_renderer = new ConvolutionRenderer(model, ConvolutionRenderer::RASTORIZER, camera->view_projection_matrix(), data_path);
 		}
->>>>>>> refs/remotes/origin/master
 	}
 	else {
 		//model2 = NULL;

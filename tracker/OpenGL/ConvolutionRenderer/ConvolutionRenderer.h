@@ -142,13 +142,9 @@ public:
 	Cylinders *cylinders;
 	Eigen::Matrix4f projection;
 	Model * model;
-<<<<<<< HEAD
-	//Model * model2;
-=======
 	//Brandon mod
 	Model * model2;
 
->>>>>>> refs/remotes/origin/master
 	SHADERMODE mode;
 	bool real_color;
 	std::string data_path;
@@ -168,7 +164,7 @@ public:
 	
 	void setup_canvas();
 
-	void pass_model_to_shader(bool fingers_only, Model *model);
+	void pass_model_to_shader(bool fingers_only);
 
 	void pass_model_to_shader_two_hands(bool fingers_only);
 

@@ -87,18 +87,7 @@ int tracker_frame = 0;
 SensorRealSense::SensorRealSense(Camera *camera, bool real_color,int handedness) : Sensor(camera) {
 	if (camera->mode() != RealSense)
 		LOG(FATAL) << "!!!FATAL: RealSense needs Intel camera mode";
-<<<<<<< HEAD
-	this->handfinder = new HandFinder(camera,1);
-	handfinder->name = "Left";
-	this->handfinder->_settings.show_wband = false; 
-	this->handfinder->_settings.show_hand = false;
-	this->R_Handfinder = new HandFinder(camera,2);
-	R_Handfinder->name = "Right";
-	R_Handfinder->_settings.show_wband = false;
-	R_Handfinder->_settings.show_hand = false;
-=======
 	this->handfinder = new HandFinder(camera,handedness);
->>>>>>> refs/remotes/origin/master
 	this->real_color = real_color;
 }
 
@@ -121,11 +110,13 @@ int SensorRealSense::initialize() {
 		std::cout << "   sense_manager->Init()" << std::endl;
 
 	PXCSession *session = PXCSession::CreateInstance();
+	std::cout << "1" << endl;
 	PXCSession::ImplDesc desc, desc1;
 	memset(&desc, 0, sizeof(desc));
 	desc.group = PXCSession::IMPL_GROUP_SENSOR;
 	desc.subgroup = PXCSession::IMPL_SUBGROUP_VIDEO_CAPTURE;
 	if (session->QueryImpl(&desc, 0, &desc1) < PXC_STATUS_NO_ERROR) return false;
+	std::cout << "2" << endl;
 
 	PXCCapture * capture;
 	pxcStatus status = session->CreateImpl<PXCCapture>(&desc1, &capture);
@@ -133,10 +124,12 @@ int SensorRealSense::initialize() {
 		QMessageBox::critical(NULL, "FATAL ERROR", "Intel RealSense device not plugged?\n(CreateImpl<PXCCapture> failed)");
 		exit(0);
 	}
+	std::cout << "3" << endl;
 
 	PXCCapture::Device* device;
 	device = capture->CreateDevice(0);
 	projection = device->CreateProjection();
+	std::cout << "4" << endl;
 
 	this->initialized = true;
 
@@ -249,19 +242,25 @@ bool SensorRealSense::fetch_streams(DataFrame &frame) {
 bool SensorRealSense::concurrent_fetch_streams(DataFrame &frame, HandFinder & other_handfinder, cv::Mat & full_color) {
 	cout << "SensorRealSense::concurrent_fetch_streams handfinder: " << (long)&other_handfinder << endl;
 	std::unique_lock<std::mutex> lock(swap_mutex);
+
+	cout << "1" << endl;
 	condition.wait(lock, [] {return thread_released; });
+	cout << "2" << endl;
 	main_released = false;
 
 	frame.color = color_array[FRONT_BUFFER].clone();
 	frame.depth = depth_array[FRONT_BUFFER].clone();
 	if (real_color) full_color = full_color_array[FRONT_BUFFER].clone();
 
+	cout << "3" << endl;
 	other_handfinder.sensor_silhouette = sensor_silhouette_buffer.clone();
 	other_handfinder._wristband_found = wristband_found_buffer;
 	other_handfinder._wband_center = wristband_center_buffer;
 	other_handfinder._wband_dir = wristband_direction_buffer;
 
 	other_handfinder.num_sensor_points = num_sensor_points_array[FRONT_BUFFER];
+
+	cout << "4" << endl;
 	for (size_t i = 0; i < other_handfinder.num_sensor_points; i++) 
 		other_handfinder.sensor_indicator[i] = sensor_indicator_array[FRONT_BUFFER][i];	
 
@@ -270,6 +269,7 @@ bool SensorRealSense::concurrent_fetch_streams(DataFrame &frame, HandFinder & ot
 	main_released = true;
 	lock.unlock();
 	condition.notify_one();
+	cout << "5" << endl;
 	return true;
 }
 

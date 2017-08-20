@@ -61,10 +61,7 @@ ConvolutionRenderer::ConvolutionRenderer(Model *model, bool real_color, std::str
 	this->data_path = data_path;
 	this->model = model;
 	this->real_color = real_color;
-<<<<<<< HEAD
-=======
 	this->model2 = NULL;
->>>>>>> refs/remotes/origin/master
 }
 
 ConvolutionRenderer::ConvolutionRenderer(Model *model,ConvolutionRenderer::SHADERMODE mode, const Eigen::Matrix4f& projection, std::string data_path) {
@@ -107,7 +104,7 @@ void ConvolutionRenderer::setup_canvas() {
 	glUniform1f(glGetUniformLocation(program.programId(), "window_width"), window_width);
 }
 
-void ConvolutionRenderer::pass_model_to_shader(bool fingers_only, Model *model) {
+void ConvolutionRenderer::pass_model_to_shader(bool fingers_only) {
 
 	if (mode == FRAMEBUFFER) {
 		glm::vec3 min_x_world = glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
@@ -433,10 +430,6 @@ void ConvolutionRenderer::render() {
 
 	camera.setup(program.programId(), projection);
 	if (real_color) setup_texture(model->real_color);
-<<<<<<< HEAD
-	pass_model_to_shader(false,model);
-	//pass_model_to_shader(false,model2);
-=======
 	if (model2 != NULL) {
 		//pass_model_to_shader(false);
 		pass_model_to_shader_two_hands(false);
@@ -444,7 +437,6 @@ void ConvolutionRenderer::render() {
 	else {
 		pass_model_to_shader(false);
 	}
->>>>>>> refs/remotes/origin/master
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, synthetic_texture_id);
@@ -494,10 +486,7 @@ void ConvolutionRenderer::render_offscreen(bool fingers_only) {
 	program.bind();
 
 	camera.setup(program.programId(), projection);
-<<<<<<< HEAD
-	pass_model_to_shader(fingers_only, model);
-	//pass_model_to_shader(fingers_only, model2);
-=======
+
 	//pass_model_to_shader(fingers_only);
 	if (model2 != NULL) {
 		cout << "Is this happening? " << endl;
@@ -507,7 +496,6 @@ void ConvolutionRenderer::render_offscreen(bool fingers_only) {
 		//cout << "Model2 is Null" << endl;
 		pass_model_to_shader(fingers_only);
 	}
->>>>>>> refs/remotes/origin/master
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, points.size());
 

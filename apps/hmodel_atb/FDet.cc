@@ -38,10 +38,6 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 #include <FaceTracker/FDet.h>
-<<<<<<< HEAD
-
-=======
->>>>>>> refs/remotes/origin/master
 using namespace FACETRACKER;
 using namespace std;
 //===========================================================================

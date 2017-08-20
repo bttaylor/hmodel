@@ -9,6 +9,7 @@
 
 #include <myo/myo.hpp>
 #include "DataCollector.h"
+
 //#include <vld.h>
 
 int main(int argc, char* argv[]) {
@@ -22,18 +23,6 @@ int main(int argc, char* argv[]) {
 	int user_name = 10;
 	bool myoEnable = false;
 
-<<<<<<< HEAD
-	//myo::Hub hub("taylor.com.text");
-	//myo::Myo* myo = hub.waitForMyo(10000);
-	//DataCollector collector = DataCollector();
-
-	//if (!myo){
-	//	std::cout << "Unable to find a Myo!";
-	//}
-
-	//myo->setStreamEmg(myo::Myo::streamEmgEnabled);
-	//hub.addListener(&collector);
-=======
 	DataCollector collector = DataCollector();
 	myo::Hub hub("taylor.com.text");
 	if (myoEnable) {		
@@ -47,7 +36,6 @@ int main(int argc, char* argv[]) {
 		myo->setStreamEmg(myo::Myo::streamEmgEnabled);
 		hub.addListener(&collector);
 	}
->>>>>>> refs/remotes/origin/master
 
 	Handedness handedness = right_hand;  //0 == Left; 1 == Right; 2 == Both
 	std::string sequence_path = "C:/Projects/Data/TwoHand/"; // "C:/Projects/Data/Fingerspelling/";
@@ -57,7 +45,7 @@ int main(int argc, char* argv[]) {
 	Q_INIT_RESOURCE(shaders);
 	QApplication app(argc, argv);
 
-	Camera camera(QVGA, 60);
+	Camera camera(RealSense, 60);
 
 	//0 = Left == Yellow; 1 == Right == Blue
 	SensorRealSense sensor(&camera, real_color, handedness);
@@ -97,16 +85,10 @@ int main(int argc, char* argv[]) {
 	glwidget.myoEnable = myoEnable;
 	worker.bind_glwidget(&glwidget,&glwidget.convolution_renderer);
 	glwidget.show();
-<<<<<<< HEAD
 
-	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color);
-	//Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
-=======
-	
-	cout << "gonna constrcut tracker" << endl;
 	Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);	
 	tracker.myoEnable = myoEnable;
->>>>>>> refs/remotes/origin/master
+
 	tracker.sensor = &sensor;
 	tracker.datastream = &datastream;
 	tracker.solutions = &solutions;

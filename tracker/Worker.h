@@ -52,10 +52,6 @@ public:
 	Model * model2;
 	HandFinder * handfinder2 = NULL;
 
-	std::vector<std::vector<float>> Bayes_mu;
-	std::vector<std::vector<float>> Bayes_sig;
-	std::vector<std::string> class_names;
-
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
