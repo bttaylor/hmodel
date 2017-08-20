@@ -706,6 +706,8 @@ void ModelSemantics::setup_dofs() {
 
 	// Joint limits
 
+
+
 	if (model->model_type == 2 && model->user_name == 0) {
 		// thumb abduction
 		model->dofs[9].min = -0.1;	model->dofs[9].max = 1.0;
@@ -753,67 +755,51 @@ void ModelSemantics::setup_dofs() {
 		model->dofs[28].min = -0.10;	model->dofs[28].max = 2.00;
 	}
 
-	if (model->model_type == 2 && model->user_name != 0) {
-		// Wrist abduction
-		model->dofs[7].min = -1.5; model->dofs[7].max = 0.5;
-		// Wrist flexion
-		model->dofs[8].min = -1.3;   model->dofs[8].max = 2.0;
-		// thumb abduction
-		model->dofs[9].min = -1.1;	model->dofs[9].max = -0.2;
-		// thumb flexion 1
-		model->dofs[10].min = -0.3;	model->dofs[10].max = 1.8;
-		// thumb flexion 2
-		model->dofs[11].min = -0.35;	model->dofs[11].max = 1.70;
-		// thumb flexion 3
-		model->dofs[12].min = -0.35;	model->dofs[12].max = 1.50;
+	//Brandon - Removed alternate joint limits for user_name == 0. 
+	// thumb abduction
+	model->dofs[9].min = -0.1;	model->dofs[9].max = 1.0;
+	// thumb flexion 1
+	model->dofs[10].min = -1.2;	model->dofs[10].max = 1.0;
+	// thumb flexion 2
+	model->dofs[11].min = -1.2;	model->dofs[11].max = 0.1;
+	// thumb flexion 3
+	model->dofs[12].min = -1.6;	model->dofs[12].max = 0.1;
 
-		// index abductions
-		model->dofs[13].min = -0.50;	model->dofs[13].max = 0.35;
-		// index flexion 1
-		model->dofs[14].min = -2.00;	model->dofs[14].max = 1.00;
-		// index flexion 2
-		model->dofs[15].min = -2.00;	model->dofs[15].max = 0.30;
-		// index flexion 3
-		model->dofs[16].min = -2.00;	model->dofs[16].max = 0.30;
+	// index abductions
+	model->dofs[13].min = -0.30;	model->dofs[13].max = 0.35;
+	// index flexion 1
+	model->dofs[14].min = -0.10;	model->dofs[14].max = 1.60;
+	// index flexion 2
+	model->dofs[15].min = -0.10;	model->dofs[15].max = 1.60;
+	// index flexion 3
+	model->dofs[16].min = -0.10;	model->dofs[16].max = 1.60;
 
-		// middle abduction
-		model->dofs[17].min = -0.50;	model->dofs[17].max = 0.25;
-		// middle flexion 1
-		model->dofs[18].min = -2.00;	model->dofs[18].max = 1.00;
-		// middle flexion 2
-		model->dofs[19].min = -2.00;	model->dofs[19].max = 0.30;
-		// middle flexion 3
-		model->dofs[20].min = -2.00;	model->dofs[20].max = 0.30;
+	// middle abduction
+	model->dofs[17].min = -0.30;	model->dofs[17].max = 0.40;
+	// middle flexion 1
+	model->dofs[18].min = -0.10;	model->dofs[18].max = 1.60;
+	// middle flexion 2
+	model->dofs[19].min = -0.10;	model->dofs[19].max = 1.60;
+	// middle flexion 3
+	model->dofs[20].min = -0.10;	model->dofs[20].max = 1.60;
 
-		// ring abduction
-		model->dofs[21].min = -0.20;	model->dofs[21].max = 0.30;
-		// ring flexion 1
-		model->dofs[22].min = -2.00;	model->dofs[22].max = 1.00;
-		// ring flexion 2
-		model->dofs[23].min = -2.00;	model->dofs[23].max = 0.30;
-		// ring flexion 3
-		model->dofs[24].min = -2.00;	model->dofs[24].max = 0.30;
+	// ring abduction
+	model->dofs[21].min = -0.10;	model->dofs[21].max = 0.30;
+	// ring flexion 1
+	model->dofs[22].min = -0.10;	model->dofs[22].max = 1.60;
+	// ring flexion 2
+	model->dofs[23].min = -0.10;	model->dofs[23].max = 1.60;
+	// ring flexion 3
+	model->dofs[24].min = -0.10;	model->dofs[24].max = 1.60;
 
-		// pinky abduction
-		model->dofs[25].min = -0.30;   model->dofs[25].max = 0.60;
-		// pinky flexion 1
-		model->dofs[26].min = -2.00;	model->dofs[26].max = 1.00;
-		// pinky flexion 2
-		model->dofs[27].min = -2.00;	model->dofs[27].max = 0.30;
-		// pinky flexion 3
-		model->dofs[28].min = -2.00;	model->dofs[28].max = 0.30;
-	}
-
-	/*for (size_t i = 0; i < model->dofs.size(); i++) {
-		cout << endl << i << endl;
-		cout << "min: " << model->dofs[i].min << endl;
-		cout << "max: " << model->dofs[i].max << endl;
-		cout << "axis = Eigen::Vector3f(" << model->dofs[i].axis[0] << ", " << model->dofs[i].axis[1] << ", " << model->dofs[i].axis[02] << ");" << endl;
-		cout << "type = " << model->dofs[i].type << ";" << endl;
-		cout << "joint_id = " << model->dofs[i].joint_id << ";" << endl;
-		cout << "phalange_id = " << model->dofs[i].phalange_id << ";" << endl;
-		}
-		*/
+	// pinky abduction
+	model->dofs[25].min = -0.20;   model->dofs[25].max = 0.65;
+	// pinky flexion 1
+	model->dofs[26].min = -0.10;	model->dofs[26].max = 1.60;
+	// pinky flexion 2
+	model->dofs[27].min = -0.10;	model->dofs[27].max = 1.60;
+	// pinky flexion 3
+	model->dofs[28].min = -0.10;	model->dofs[28].max = 1.60;
 }
 
 void ModelSemantics::setup_phalanges() {

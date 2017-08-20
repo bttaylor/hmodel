@@ -71,13 +71,6 @@ void Model::init(int user_name, std::string data_path, Handedness handedness) {
 	jointid_to_phalangeid_map[19] = 12;
 	jointid_to_phalangeid_map[23] = 15;
 
-	/*for (size_t i = 0; i < num_phalanges; i++) {
-		Phalange phalange = phalanges[i];
-		cout << "id = " << i << endl;
-		cout << "init_local: " << endl << phalange.init_local << endl;
-		cout << endl << endl;
-		}*/
-	//print_model();
 }
 
 void Model::initialize_offsets() {
@@ -443,7 +436,7 @@ void Model::load_model_from_file() {
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
 
-	if (handedness = right_hand) {
+	if (handedness == right_hand) {
 		read_float_matrix(data_path + model_folder_path, "C_Right", centers);
 
 		// Read initial transformations
