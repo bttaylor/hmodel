@@ -91,7 +91,7 @@ void DataCollector::onOrientationData(myo::Myo* myo, uint64_t timestamp, const m
 	roll_w = static_cast<int>((roll + (float)M_PI) / (M_PI * 2.0f) * 18);
 	pitch_w = static_cast<int>((pitch + (float)M_PI / 2.0f) / M_PI * 18);
 	yaw_w = static_cast<int>((yaw + (float)M_PI) / (M_PI * 2.0f) * 18);
-	std::cout << "myo onOrientationChanged. pitch: " << pitch_w << std::endl;
+	std::cout << "myo onOrientationChanged. pitch: " << pitch_w << " myo: " << (long)myo << std::endl;
 }
 
 // onPose() is called whenever the Myo detects that the person wearing it has changed their pose, for example,
@@ -191,4 +191,21 @@ void DataCollector::print()
 	}
 
 	std::cout << std::flush;
+}
+
+void DataCollector::onPair(myo::Myo* myo, uint64_t timestamp, myo::FirmwareVersion firmwareVersion) {
+	std::cout << "  Entered onPair" << std::endl;
+	knownMyos.push_back(myo);
+
+	std::cout << "  Paired with " << identifyMyo(myo) << std::endl;
+}
+size_t DataCollector::identifyMyo(myo::Myo* myo) {
+	// Walk through the list of Myo devices that we've seen pairing events for.
+	for (size_t i = 0; i < knownMyos.size(); ++i) {
+		// If two Myo pointers compare equal, they refer to the same Myo device.
+		if (knownMyos[i] == myo) {
+			return i + 1;
+		}
+	}
+	return 0;
 }

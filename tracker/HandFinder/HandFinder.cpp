@@ -32,12 +32,10 @@ HandFinder::HandFinder(Camera *camera, Handedness handedness, std::string data_p
 
 	 std::string path;
 	 if (handedness == right_hand || handedness == both_hands) {
-		 cout << "Loading Blue Wristband" << endl;
 		 path = data_path + "wristbands/blue_wristband.txt";
 		 //path = local_file_path("blue_wristband.txt", true);
 	 }
 	 else {
-		 cout << "Loading Yellow Wristband" << endl;
 		 path = data_path + "wristbands/yellow_wristband.txt";
 		 //path = local_file_path("yellow_wristband.txt", true);
 	 }

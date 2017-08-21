@@ -35,7 +35,7 @@ public:
 	DataStream* datastream;
 	SolutionStream* solutions;
 	Worker*const worker = NULL;
-	myo::Hub*const hub = NULL;
+	myo::Hub* hub = NULL;
 
 	OnlinePeformanceMetrics online_performance_metrics;
 

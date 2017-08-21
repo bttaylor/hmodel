@@ -45,7 +45,7 @@ public:
 	uint64_t* accel_time_buffer;
 	myo::Vector3<float>* gyro_buffer;
 	uint64_t* gyro_time_buffer;
-
+	std::vector<myo::Myo*> knownMyos;
 
 	DataCollector();
 	~DataCollector();
@@ -62,5 +62,7 @@ public:
 	void print();
 	void onAccelerometerData(myo::Myo* myo, uint64_t timestamp, const myo::Vector3<float>& accel);
 	void onGyroscopeData(myo::Myo* myo, uint64_t timestamp, const myo::Vector3<float>& gyro);
+	void onPair(myo::Myo* myo, uint64_t timestamp, myo::FirmwareVersion firmwareVersion);
+	size_t identifyMyo(myo::Myo* myo);
 };
 
