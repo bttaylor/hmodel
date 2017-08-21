@@ -140,6 +140,96 @@ void ConvolutionRenderer::pass_model_to_shader(bool fingers_only) {
 	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_u3"), tangents_u3.size(), (GLfloat *)tangents_u3.data());
 }
 
+
+void ConvolutionRenderer::pass_model_to_shader_two_hands(bool fingers_only) {
+	Model * model = worker->get_right_model();
+	Model * model2 = worker->get_left_model();
+	if (mode == FRAMEBUFFER) {
+		//Not sure this gets called or if only 'mode == NORMAL' will happen for two-handed rendering
+		glm::vec3 min_x_world = glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
+		glm::vec3 min_y_world = glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
+		glm::vec3 max_x_world = -glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
+		glm::vec3 max_y_world = -glm::vec3(numeric_limits<float>::max(), numeric_limits<float>::max(), numeric_limits<float>::max());
+
+		int num_centers = model->centers.size();
+		if (fingers_only) num_centers = 34;
+		for (size_t i = 0; i < num_centers; i++) {
+			if (model->centers[i][0] - model->radii[i] < min_x_world[0]) min_x_world = model->centers[i] - model->radii[i];
+			if (model->centers[i][1] - model->radii[i] < min_y_world[1]) min_y_world = model->centers[i] - model->radii[i];
+			if (model->centers[i][0] + model->radii[i] > max_x_world[0]) max_x_world = model->centers[i] + model->radii[i];
+			if (model->centers[i][1] + model->radii[i] > max_y_world[1]) max_y_world = model->centers[i] + model->radii[i];
+			if (model2->centers[i][0] - model2->radii[i] < min_x_world[0]) min_x_world = model2->centers[i] - model2->radii[i];
+			if (model2->centers[i][1] - model2->radii[i] < min_y_world[1]) min_y_world = model2->centers[i] - model2->radii[i];
+			if (model2->centers[i][0] + model2->radii[i] > max_x_world[0]) max_x_world = model2->centers[i] + model2->radii[i];
+			if (model2->centers[i][1] + model2->radii[i] > max_y_world[1]) max_y_world = model2->centers[i] + model2->radii[i];
+		}
+		glm::vec3 min_x_window = world_to_window_coordinates(min_x_world);
+		glm::vec3 min_y_window = world_to_window_coordinates(min_y_world);
+		glm::vec3 max_x_window = world_to_window_coordinates(max_x_world);
+		glm::vec3 max_y_window = world_to_window_coordinates(max_y_world);
+
+		glUniform1f(glGetUniformLocation(program.programId(), "min_x"), min_x_window[0]);
+		glUniform1f(glGetUniformLocation(program.programId(), "min_y"), min_y_window[1]);
+		glUniform1f(glGetUniformLocation(program.programId(), "max_x"), max_x_window[0]);
+		glUniform1f(glGetUniformLocation(program.programId(), "max_y"), max_y_window[1]);
+
+		glUniform1i(glGetUniformLocation(program.programId(), "fingers_only"), fingers_only);
+	
+	}
+	
+	std::vector<glm::vec3> centers = std::vector<glm::vec3>(model->centers.size() * 2);
+	for (size_t i = 0; i < model->centers.size(); i++) {
+		centers[i] = model->centers[i];
+		centers[i + model->centers.size()] = model2->centers[i];
+	}
+	std::vector<float> radii = std::vector<float>(model->radii.size() * 2);
+	for (size_t i = 0; i < model->radii.size(); i++) {
+		radii[i] = model->radii[i];
+		radii[i + model->radii.size()] = model2->radii[i];
+	}
+	std::vector<glm::ivec3> blocks = std::vector<glm::ivec3>(model->blocks.size() * 2);
+	for (size_t i = 0; i < model->blocks.size(); i++) {
+		blocks[i] = model->blocks[i];
+		blocks[i + model->blocks.size()] = model2->blocks[i] + 38;
+	}
+
+	glUniform1f(glGetUniformLocation(program.programId(), "num_blocks"), blocks.size());
+	glUniform3fv(glGetUniformLocation(program.programId(), "centers"), centers.size(), (GLfloat *)centers.data());
+	glUniform1fv(glGetUniformLocation(program.programId(), "radii"), radii.size(), (GLfloat *)radii.data());
+	glUniform3iv(glGetUniformLocation(program.programId(), "blocks"), blocks.size(), (GLint *)blocks.data());
+
+	tangents_v1 = std::vector<Eigen::Vector3f>(model->tangent_points.size() * 2, Eigen::Vector3f());
+	tangents_v2 = std::vector<Eigen::Vector3f>(model->tangent_points.size() * 2, Eigen::Vector3f());
+	tangents_v3 = std::vector<Eigen::Vector3f>(model->tangent_points.size() * 2, Eigen::Vector3f());
+	tangents_u1 = std::vector<Eigen::Vector3f>(model->tangent_points.size() * 2, Eigen::Vector3f());
+	tangents_u2 = std::vector<Eigen::Vector3f>(model->tangent_points.size() * 2, Eigen::Vector3f());
+	tangents_u3 = std::vector<Eigen::Vector3f>(model->tangent_points.size() * 2, Eigen::Vector3f());
+	for (size_t i = 0; i < model->tangent_points.size(); i++) {
+		tangents_v1[i] = Eigen::Vector3f(model->tangent_points[i].v1[0], model->tangent_points[i].v1[1], model->tangent_points[i].v1[2]);
+		tangents_v2[i] = Eigen::Vector3f(model->tangent_points[i].v2[0], model->tangent_points[i].v2[1], model->tangent_points[i].v2[2]);
+		tangents_v3[i] = Eigen::Vector3f(model->tangent_points[i].v3[0], model->tangent_points[i].v3[1], model->tangent_points[i].v3[2]);
+		tangents_u1[i] = Eigen::Vector3f(model->tangent_points[i].u1[0], model->tangent_points[i].u1[1], model->tangent_points[i].u1[2]);
+		tangents_u2[i] = Eigen::Vector3f(model->tangent_points[i].u2[0], model->tangent_points[i].u2[1], model->tangent_points[i].u2[2]);
+		tangents_u3[i] = Eigen::Vector3f(model->tangent_points[i].u3[0], model->tangent_points[i].u3[1], model->tangent_points[i].u3[2]);
+	}
+	//2nd hand mod
+	for (size_t i = 0; i < model2->tangent_points.size(); i++) {
+		tangents_v1[i + model->tangent_points.size()] = Eigen::Vector3f(model2->tangent_points[i].v1[0], model2->tangent_points[i].v1[1], model2->tangent_points[i].v1[2]);
+		tangents_v2[i + model->tangent_points.size()] = Eigen::Vector3f(model2->tangent_points[i].v2[0], model2->tangent_points[i].v2[1], model2->tangent_points[i].v2[2]);
+		tangents_v3[i + model->tangent_points.size()] = Eigen::Vector3f(model2->tangent_points[i].v3[0], model2->tangent_points[i].v3[1], model2->tangent_points[i].v3[2]);
+		tangents_u1[i + model->tangent_points.size()] = Eigen::Vector3f(model2->tangent_points[i].u1[0], model2->tangent_points[i].u1[1], model2->tangent_points[i].u1[2]);
+		tangents_u2[i + model->tangent_points.size()] = Eigen::Vector3f(model2->tangent_points[i].u2[0], model2->tangent_points[i].u2[1], model2->tangent_points[i].u2[2]);
+		tangents_u3[i + model->tangent_points.size()] = Eigen::Vector3f(model2->tangent_points[i].u3[0], model2->tangent_points[i].u3[1], model2->tangent_points[i].u3[2]);
+	}
+
+	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_v1"), tangents_v1.size(), (GLfloat *)tangents_v1.data());
+	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_v2"), tangents_v2.size(), (GLfloat *)tangents_v2.data());
+	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_v3"), tangents_v3.size(), (GLfloat *)tangents_v3.data());
+	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_u1"), tangents_u1.size(), (GLfloat *)tangents_u1.data());
+	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_u2"), tangents_u2.size(), (GLfloat *)tangents_u2.data());
+	glUniform3fv(glGetUniformLocation(program.programId(), "tangents_u3"), tangents_u3.size(), (GLfloat *)tangents_u3.data());
+}
+
 void ConvolutionRenderer::setup_texture() {
 	QImage texture_image;
 	if (!texture_image.load(QString::fromUtf8(data_path.c_str()) + "shaders//skin_texture.png")) std::cerr << "error loading" << std::endl;
@@ -202,7 +292,12 @@ void ConvolutionRenderer::init(ConvolutionRenderer::SHADERMODE mode) {
 	switch (mode) {
 	case NORMAL:
 		vertex_shader_name = QString::fromUtf8(data_path.c_str()) + "shaders//" + "model_vshader.glsl";
-		fragment_shader_name = QString::fromUtf8(data_path.c_str()) + "shaders//" + "model_fshader.glsl";
+		if (worker->handedness == both_hands) {
+			fragment_shader_name = QString::fromUtf8(data_path.c_str()) + "shaders//" + "model_fshader_two_hand.glsl";
+		}
+		else {
+			fragment_shader_name = QString::fromUtf8(data_path.c_str()) + "shaders//" + "model_fshader.glsl";
+		}
 		break;
 	case FRAMEBUFFER:
 		vertex_shader_name = QString::fromUtf8(data_path.c_str()) + "shaders//" + "model_vshader.glsl";
@@ -247,10 +342,14 @@ void ConvolutionRenderer::render() {
 	program.bind();
 
 	Model *model = worker->get_active_model();
-	//cout << "render" << endl;
 	camera.setup(program.programId(), projection);
 	if (real_color) setup_texture(model->real_color);
-	pass_model_to_shader(false);
+	if (worker->handedness == both_hands) {
+		pass_model_to_shader_two_hands(false);
+	}
+	else {
+		pass_model_to_shader(false);
+	}
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, synthetic_texture_id);
@@ -258,7 +357,10 @@ void ConvolutionRenderer::render() {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, silhouette_texture_id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, model->silhouette_texture.cols, model->silhouette_texture.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, model->silhouette_texture.ptr());
+
+	//This will limit the rendering to the silhouette area. Might be more efficient to merge the two hands, but I'm not sure
+	if(worker->handedness != both_hands)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, model->silhouette_texture.cols, model->silhouette_texture.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, model->silhouette_texture.ptr());
 
 	if (real_color) {
 		glActiveTexture(GL_TEXTURE2);
@@ -275,7 +377,6 @@ void ConvolutionRenderer::render_offscreen(bool fingers_only) {
 	vao.bind();
 	program.bind();
 
-	//cout << "render_offscreen" << endl;
 	camera.setup(program.programId(), projection);
 	pass_model_to_shader(fingers_only);
 

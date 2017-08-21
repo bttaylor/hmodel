@@ -21,6 +21,7 @@ public:
 
     void init(Model * model);
     void track(LinearSystem& system);
+	void set_model(Model* model);
 };
 
 }

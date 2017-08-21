@@ -35,6 +35,7 @@ private:
 public:
     void init(Model * model);
     void track(LinearSystem& system);
+	void set_model(Model* model);
 
 private:
 	void collision_compute_update(LinearSystem &system, Scalar omega);

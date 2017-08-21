@@ -28,27 +28,29 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	this->data_path = data_path;
 	this->handedness = handedness;
 
-	this->model = new Model();
-	this->activeModel = this->model;
+	this->model_1 = new Model();
 	if (handedness == right_hand || handedness == both_hands) {
-		this->model->init(user_name, data_path, right_hand);		
+		this->model_1->init(user_name, data_path, right_hand);		
 	}
 	else {
-		this->model->init(user_name, data_path, left_hand);
+		this->model_1->init(user_name, data_path, left_hand);
 	}
 	std::vector<float> theta_initial = std::vector<float>(num_thetas, 0);
 	theta_initial[1] = 70; theta_initial[2] = 400;
-	model->move(theta_initial);
-	model->update_centers();
-	model->compute_outline();
+	model_1->move(theta_initial);
+	model_1->update_centers();
+	model_1->compute_outline();
+
+	//set active model to model_1
+	this->model = this->model_1;
 
 	if (handedness == both_hands) {
-		model2 = new Model();  //Right
-		model2->init(user_name, data_path, left_hand);
-		theta_initial[0] = -70;
-		model2->move(theta_initial);
-		model2->update_centers();
-		model2->compute_outline();
+		model_2 = new Model();  //Right
+		model_2->init(user_name, data_path, left_hand);
+		theta_initial[0] = -70; theta_initial[1] = 0;
+		model_2->move(theta_initial);
+		model_2->update_centers();
+		model_2->compute_outline();
 	}
 
 	//Brandon
@@ -73,9 +75,13 @@ void Worker::init_graphic_resources() {
 	///--- Initialize the energies modules
 	using namespace energy;
 	trivial_detector = new TrivialDetector(camera, &offscreen_renderer);
-	handfinder = new HandFinder(camera, handedness, data_path);
-	E_fitting.init(this);
+	handfinder_1 = new HandFinder(camera, handedness, data_path);
+	if (handedness == both_hands) {
+		handfinder_2 = new HandFinder(camera, left_hand, data_path);
+	}
+	handfinder = handfinder_1;
 
+	E_fitting.init(this);
 	E_limits.init(model);
 	E_collision.init(model);
 	E_pose.init(this);
@@ -96,7 +102,6 @@ Worker::~Worker() {
 }
 
 bool Worker::track_till_convergence() {
-	
 	for (int i = 0; i < settings->termination_max_iters; ++i) {
 		track(i);
 		//tracking_error_optimization[i] = tracking_error;
@@ -141,11 +146,9 @@ void Worker::track(int iter) {
 }
 
 void Worker::read_bayes_vectors(std::string data_path, std::string name, std::vector<std::vector<float>> & input) {
-	//std::cout << "opening: " << data_path << name << std::endl;
 	FILE *fp = fopen((data_path + name ).c_str(), "r");
 	int N = 41;
 
-	//fscanf(fp, "%d", &N);
 	for (int i = 0; i < N; ++i) {
 		std::vector<float> theta = std::vector<float>();
 		for (int j = 0; j < 20; ++j){
@@ -154,10 +157,8 @@ void Worker::read_bayes_vectors(std::string data_path, std::string name, std::ve
 			theta.push_back(a);
 		}
 		input.push_back(theta);
-		//std::cout << "one value is: " << theta[3] << std::endl;
 	}
 	fclose(fp);
-	std::cout << "Reading some vecotr for the classifier" << std::endl;
 }
 
 void Worker::read_class_names(std::string data_path, std::string name){
@@ -175,7 +176,6 @@ void Worker::read_class_names(std::string data_path, std::string name){
 }
 
 int Worker::classify(){
-//void calc_max_likelihood(std::vector<float> theta){
 	int N = 41;
 	int class_max = 0;
 	float max_likelihood = -999999;
@@ -191,14 +191,45 @@ int Worker::classify(){
 			max_likelihood = likelihood;
 			class_max = i;
 		}
-		//std::cout << "Class " << i << " likelihood: " << likelihood << std::endl;
 	}
-	//std::cout << "Most likely Class: " << class_names[class_max] << std::endl;
 
 	return class_max;
 
 }
 
 Model* Worker::get_active_model() {
-	return activeModel;
+	return model;
+}
+
+HandFinder* Worker::get_active_handfinder() {
+	return handfinder;
+}
+
+void Worker::swap_hands() {
+	if (model == model_1) {
+		model = model_2;
+		handfinder = handfinder_2;
+	}
+	else {
+		model = model_1;
+		handfinder = handfinder_1;
+	}
+	E_fitting.set_model(model, handfinder);
+	E_collision.set_model(model);
+	E_temporal.set_model(model);
+	E_damping.set_model(model);
+}
+
+Model* Worker::get_right_model() {
+	if (model_1->handedness == right_hand)
+		return model_1;
+	else
+		return NULL;
+}
+
+Model* Worker::get_left_model() {
+	if (model_1->handedness == left_hand)
+		return model_1;
+	else 
+		return model_2;
 }

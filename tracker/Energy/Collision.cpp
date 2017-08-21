@@ -318,4 +318,8 @@ namespace energy {
 		collision_compute_update(system, settings->collision_weight);		
 	}
 
+	void Collision::set_model(Model * model) {
+		this->model = model;
+	}
+
 } ///< energy::

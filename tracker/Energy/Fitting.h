@@ -17,6 +17,8 @@ public:
     fitting::Settings _settings;
     fitting::Settings*const settings = &_settings;
 	DistanceTransform distance_transform;
+	//Brandon
+	void set_model(Model*,HandFinder*);
 
 public:
 #ifdef WITH_CUDA

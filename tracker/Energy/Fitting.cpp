@@ -53,8 +53,8 @@ void energy::Fitting::cleanup() {
 void energy::Fitting::init(Worker *worker) {
 	this->camera = worker->camera;
 	this->sensor_depth_texture = worker->sensor_depth_texture;
-	this->handfinder = worker->handfinder;
-	this->model = worker->model;
+	this->handfinder = worker->get_active_handfinder();
+	this->model = worker->get_active_model();
 
 	///--- 3D fitting
 	tw_settings->tw_add(settings->fit3D_enable, "E_3D (enable)", "group=Fitting");
@@ -77,8 +77,9 @@ void energy::Fitting::init(Worker *worker) {
 	///--- init resource mapper for cuda
 	sensor_depth.init(sensor_depth_texture->texid());
 
+	Model* model = worker->get_active_model();
 	kernel_init(this->settings, camera->width(), camera->height(), num_thetas, camera->focal_length_x(), camera->focal_length_y(), camera->inv_projection_matrix().data(),
-		d, model->centers.size(), model->blocks.size(), model->max_num_outlines, model->num_tangent_fields, model->num_outline_fields, false, worker->test, worker->model->model_type);
+		d, model->centers.size(), model->blocks.size(), model->max_num_outlines, model->num_tangent_fields, model->num_outline_fields, false, worker->test, model->model_type);
 	CHECK_ERROR_GL();
 }
 
@@ -93,11 +94,11 @@ void energy::Fitting::track(DataFrame& frame, LinearSystem& sys, bool rigid_only
 		model->host_pointer_tangent_points, model->host_pointer_outline, model->host_pointer_blockid_to_jointid_map);
 
 	cv::Mat& sensor_silhouette = handfinder->sensor_silhouette;
-	static int last_uploaded_id = -1; 
+	static int last_uploaded_id = -1; //static variable, so it's not set to -1 every time. seems dumb.  -Brandon
 	static cv::Mat sensor_silhouette_flipped;
 
 	// Compute distance transform
-	if (last_uploaded_id != frame.id) {
+	if (last_uploaded_id != frame.id || iter == 0) {
 		kernel_upload_sensor_indicator(handfinder->sensor_indicator, handfinder->num_sensor_points);
 
 		if (settings->fit2D_enable) {
@@ -126,6 +127,11 @@ void energy::Fitting::track(DataFrame& frame, LinearSystem& sys, bool rigid_only
 
 	kernel_unbind();
 	sensor_depth.unbind();
+}
+
+void energy::Fitting::set_model(Model * model,HandFinder * handfinder) {
+	this->model = model;
+	this->handfinder = handfinder;
 }
 
 energy::Fitting::~Fitting() {

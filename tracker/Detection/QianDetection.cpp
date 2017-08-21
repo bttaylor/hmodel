@@ -16,7 +16,7 @@
 
 QianDetection::QianDetection(Worker *worker) : worker(worker) {
 
-    detection = new DetectionStream(worker->model);
+    detection = new DetectionStream(worker->get_active_model());
     find_fingers = new FindFingers(worker, detection);
 
     tw_settings->tw_add(settings->display, "Detect. SHOW?","group=Tracker");
@@ -138,7 +138,7 @@ void QianDetection::detect_compute_points_update(LinearSystem& system_detection,
 		Vector3 s = detection->get_point_source(id);
 
 		Eigen::Matrix<Scalar, 3, num_thetas> js;
-		js = worker->model->jacobian(s, worker->model->jointid_to_phalangeid_map[id]);
+		js = worker->get_active_model()->jacobian(s, worker->get_active_model()->jointid_to_phalangeid_map[id]);
 
 		J.block(c * i, 0, c, num_thetas) += js;
 		f.block(c * i, 0, c, 1) += factor *(t - s);
@@ -174,7 +174,7 @@ void QianDetection::detect_compute_lines_update(LinearSystem& system_detection, 
 			Scalar indicator = (r - t).dot(s - t) / (r - t).norm() / (r - t).norm();
 
 			Eigen::Matrix<Scalar, 3, num_thetas> js;
-			js = worker->model->jacobian(s, worker->model->jointid_to_phalangeid_map[id]);			
+			js = worker->get_active_model()->jacobian(s, worker->get_active_model()->jointid_to_phalangeid_map[id]);			
 
 			Vector3 p;
 			if (indicator > 0 && indicator < 1) {
@@ -220,7 +220,7 @@ void QianDetection::detect_compute_direction_update(LinearSystem& system_detecti
 		Vector3 s = detection->get_point_source(id);
 
 		Eigen::Matrix<Scalar, 3, num_thetas> js; 
-		js = worker->model->jacobian(s, worker->model->jointid_to_phalangeid_map[id]);		
+		js = worker->get_active_model()->jacobian(s, worker->get_active_model()->jointid_to_phalangeid_map[id]);		
 
 		J.block(c * i, 0, c, num_thetas) += js;
 		f.block(c * i, 0, c, 1) += factor *(t - s);
@@ -291,7 +291,7 @@ void QianDetection::my_damping_track(LinearSystem& system) {
 	Eigen::Matrix<Scalar, num_thetas, 1>  d = Eigen::Matrix<Scalar, num_thetas, 1>::Ones(system.lhs.rows(), 1);
 
 	for (int i = 0; i < num_thetas; ++i) {
-		if (worker->model->dofs[i].type == TRANSLATION_AXIS) d(i) = lambda_translation;
+		if (worker->get_active_model()->dofs[i].type == TRANSLATION_AXIS) d(i) = lambda_translation;
 		else d(i) = lambda_rotation;
 		if (i >= 3 && i < 6) d(i) *= 1000;
 	}
@@ -308,8 +308,8 @@ void QianDetection::optimize_current_permutation(size_t permutation, size_t dire
 	size_t num_iterations = 10;
 	for (size_t optimization_iteration = 0; optimization_iteration < num_iterations; optimization_iteration++) {
 
-		worker->model->move(theta_std);
-		worker->model->update_centers();
+		worker->get_active_model()->move(theta_std);
+		worker->get_active_model()->update_centers();
 
 		if (optimization_iteration == num_iterations - 1) break;
 
@@ -329,7 +329,7 @@ void QianDetection::optimize_current_permutation(size_t permutation, size_t dire
         std::vector<Scalar> delta_theta_std;
         for(int t = 0; t < delta_theta.size(); ++t)
             delta_theta_std.push_back(delta_theta(t));
-		theta_std = worker->model->get_updated_parameters(theta_std, delta_theta_std);
+		theta_std = worker->get_active_model()->get_updated_parameters(theta_std, delta_theta_std);
 	}
 }
 
@@ -343,12 +343,12 @@ void QianDetection::rigid_aligment(const Eigen::Matrix<Scalar, num_thetas, 1> & 
 	std::vector<float>theta_std;
 	theta_std = std::vector<float>(num_thetas, 0);
 	for (size_t i = 0; i < num_thetas; i++) theta_std[i] = theta_0(i);
-	worker->model->move(theta_std);
-	worker->model->update_centers();
+	worker->get_active_model()->move(theta_std);
+	worker->get_active_model()->update_centers();
 	
 	// Get palm point for right alignment
 	Vector3 palm_target = detection->get_point_target(0);
-	Vector3 palm_source = worker->model->get_palm_center();
+	Vector3 palm_source = worker->get_active_model()->get_palm_center();
 
 	Vs.col(detection->get_num_point_targets()) = palm_source.transpose();
 	Vt.col(detection->get_num_point_targets()) = palm_target.transpose();
@@ -369,8 +369,8 @@ void QianDetection::rigid_aligment(const Eigen::Matrix<Scalar, num_thetas, 1> & 
 	Vec3f euler_angles = R.eulerAngles(0, 1, 2);
 	theta = theta_0;
 	theta.segment(3, 3) = euler_angles;
-	worker->model->move(theta_std);
-	worker->model->update_centers();
+	worker->get_active_model()->move(theta_std);
+	worker->get_active_model()->update_centers();
 
 	// Display
 	/*std::vector<Vector3> result_points;
@@ -391,7 +391,7 @@ void QianDetection::detection_iterate() {
 
 	// Set palm position
 	Eigen::Matrix<Scalar, num_thetas, 1> theta_0 = Eigen::Matrix<Scalar, num_thetas, 1>::Zero(num_thetas, 1);
-	float palm_length = worker->model->get_palm_length();
+	float palm_length = worker->get_active_model()->get_palm_length();
 	Vector3 shift = 0.5 * palm_length * Vector3(0, 1, 0);
 	Vector3 target = detection->get_plane_target_origin() - shift;
 	theta_0.head(3) = target;
@@ -429,8 +429,8 @@ void QianDetection::detection_iterate() {
 		}
 		break;
 	}	
-	worker->model->move(theta_min_energy);
-	worker->model->update_centers();
+	worker->get_active_model()->move(theta_min_energy);
+	worker->get_active_model()->update_centers();
 }
 
 

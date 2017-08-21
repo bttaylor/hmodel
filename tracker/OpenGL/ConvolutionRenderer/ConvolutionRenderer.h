@@ -161,6 +161,8 @@ public:
 
 	void pass_model_to_shader(bool fingers_only);
 
+	void pass_model_to_shader_two_hands(bool fingers_only);
+
 	void setup_texture(cv::Mat & color_frame);
 
 	void setup_texture();

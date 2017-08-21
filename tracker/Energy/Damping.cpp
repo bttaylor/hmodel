@@ -38,4 +38,8 @@ namespace energy {
 		if (Energy::safety_check) Energy::has_nan(system);
 	}
 
+	void Damping::set_model(Model * model) {
+		this->model = model;
+	}
+
 } 

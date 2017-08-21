@@ -67,10 +67,10 @@ void GLWidget::paintGL() {
 
 	///--- Rendering
 	Eigen::Matrix4f view_projection = _camera->view_projection_matrix() * view;
-	if (worker->handfinder->wristband_found()) {
+	if (worker->get_active_handfinder()->wristband_found()) {
 		kinect_renderer.enable_colormap(true);
-		kinect_renderer.set_zNear(worker->handfinder->wristband_center()[2] - 150);
-		kinect_renderer.set_zFar(worker->handfinder->wristband_center()[2] + 150);
+		kinect_renderer.set_zNear(worker->get_active_handfinder()->wristband_center()[2] - 150);
+		kinect_renderer.set_zFar(worker->get_active_handfinder()->wristband_center()[2] + 150);
 	}
 	kinect_renderer.set_uniform("view_projection", view_projection);
 	kinect_renderer.render();
@@ -86,8 +86,8 @@ void GLWidget::paintGL() {
 }
 
 void GLWidget::process_mouse_movement(GLfloat cursor_x, GLfloat cursor_y) {
-	glm::vec3 image_center_glm = worker->model->centers[worker->model->centers_name_to_id_map["palm_back"]] +
-		worker->model->centers[worker->model->centers_name_to_id_map["palm_middle"]];
+	glm::vec3 image_center_glm = worker->get_active_model()->centers[worker->get_active_model()->centers_name_to_id_map["palm_back"]] +
+		worker->get_active_model()->centers[worker->get_active_model()->centers_name_to_id_map["palm_middle"]];
 	image_center = Eigen::Vector3f(image_center_glm[0] / 2, image_center_glm[1] / 2 + 30, image_center_glm[2] / 2);
 	float d = (camera_center - image_center).norm();
 
@@ -169,32 +169,32 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 	break;
 	case Qt::Key_1: {
 		cout << "uniform scaling up" << endl;
-		worker->model->resize_model(1.05, 1.0, 1.0);
+		worker->get_active_model()->resize_model(1.05, 1.0, 1.0);
 	}
 	break;
 	case Qt::Key_2: {
 		cout << "uniform scaling down" << endl;
-		worker->model->resize_model(0.95, 1.0, 1.0);
+		worker->get_active_model()->resize_model(0.95, 1.0, 1.0);
 	}
 	break;
 	case Qt::Key_3: {
 		cout << "width scaling up" << endl;
-		worker->model->resize_model(1.0, 1.05, 1.0);
+		worker->get_active_model()->resize_model(1.0, 1.05, 1.0);
 	}
 	break;
 	case Qt::Key_4: {
 		cout << "width scaling down" << endl;
-		worker->model->resize_model(1.0, 0.95, 1.0);
+		worker->get_active_model()->resize_model(1.0, 0.95, 1.0);
 	}
 	break;
 	case Qt::Key_5: {
 		cout << "thickness scaling up" << endl;
-		worker->model->resize_model(1.0, 1.0, 1.05);
+		worker->get_active_model()->resize_model(1.0, 1.0, 1.05);
 	}
 	break;
 	case Qt::Key_6: {
 		cout << "thickness scaling down" << endl;
-		worker->model->resize_model(1.0, 1.0, 0.95);
+		worker->get_active_model()->resize_model(1.0, 1.0, 0.95);
 	}
 	break;
 	}

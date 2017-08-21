@@ -92,7 +92,6 @@ SensorRealSense::SensorRealSense(Camera *camera, bool real_color, Handedness han
 }
 
 int SensorRealSense::initialize() {
-	std::cout << "SensorRealSense::initialize()" << std::endl;
 	sense_manager = PXCSenseManager::CreateInstance();
 	if (!sense_manager) {
 		wprintf_s(L"Unable to create the PXCSenseManager\n");
@@ -136,7 +135,6 @@ SensorRealSense::~SensorRealSense() {
 }
 
 bool SensorRealSense::spin_wait_for_data(Scalar timeout_seconds) {
-
 	DataFrame frame(-1);
 	QElapsedTimer chrono;
 	chrono.start();
@@ -144,9 +142,12 @@ bool SensorRealSense::spin_wait_for_data(Scalar timeout_seconds) {
 		LOG(INFO) << "Waiting for data.. " << chrono.elapsed();
 		Sleeper::msleep(500);
 		QApplication::processEvents(QEventLoop::AllEvents);
-		if (chrono.elapsed() > 1000 * timeout_seconds)
+		if (chrono.elapsed() > 1000 * timeout_seconds) {
+			cout << "chrono.elapsed() > 1000 seconds" << endl;
 			return false;
+		}
 	}
+	cout << "fetch_streams(frame) == true" << endl;
 	return true;
 }
 
@@ -228,7 +229,6 @@ bool SensorRealSense::fetch_streams(DataFrame &frame) {
 }
 
 bool SensorRealSense::concurrent_fetch_streams(DataFrame &frame, HandFinder & other_handfinder, cv::Mat & full_color) {
-
 	std::unique_lock<std::mutex> lock(swap_mutex);
 	condition.wait(lock, [] {return thread_released; });
 	main_released = false;
@@ -340,7 +340,6 @@ bool SensorRealSense::run() {
 		sync_color_pxc->Release();
 
 		sense_manager->ReleaseFrame();
-
 		handfinder->binary_classification(depth_array[BACK_BUFFER], color_array[BACK_BUFFER]);
 		num_sensor_points_array[BACK_BUFFER] = 0;
 		int count = 0;

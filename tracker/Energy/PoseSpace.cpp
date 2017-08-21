@@ -80,7 +80,7 @@ namespace energy {
 
 		Vector2 xk = Vector2(axis_x, axis_y);
 
-		std::vector<float> theta_std = _worker->model->get_theta();
+		std::vector<float> theta_std = _worker->get_active_model()->get_theta();
 		if (pose_space_type == THUMB) {
 			theta_recovered = _P * xk +_mu.segment(0, num_thetas_thumb);
 			for (int i = 0; i < theta_recovered.rows(); ++i) {
@@ -94,8 +94,8 @@ namespace energy {
 			}
 		}			
 		
-		_worker->model->move(theta_std);
-		_worker->model->update_centers();
+		_worker->get_active_model()->move(theta_std);
+		_worker->get_active_model()->update_centers();
 		_worker->updateGL();		
 	}
 

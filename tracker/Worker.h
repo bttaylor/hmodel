@@ -40,6 +40,13 @@ public:
 public:
 	void bind_glwidget(QGLWidget* glarea) { this->glarea = glarea; }
 	void updateGL();
+private:
+	Model * model;
+	Model * model_2 = NULL;
+	Model * model_1 = NULL;
+	HandFinder* handfinder_1 = NULL;
+	HandFinder* handfinder_2 = NULL;
+	HandFinder* handfinder = NULL;
 
 public:
 	bool test;
@@ -49,9 +56,6 @@ public:
 	std::string data_path;
 
 	Camera* camera = NULL;
-	Model * model;
-	Model * model2;
-	Model * activeModel;
 	DataFrame current_frame = DataFrame(-1);
 	TrackingError tracking_error;
 	//std::vector<TrackingError> tracking_error_optimization;
@@ -66,8 +70,6 @@ public:
 	energy::Collision E_collision;
 	energy::PoseSpace E_pose;
 
-	HandFinder* handfinder = NULL;
-	HandFinder* handfinder2 = NULL;
 	TrivialDetector* trivial_detector = NULL;
 	OffscreenRenderer offscreen_renderer;
 	OffscreenRenderer rastorizer;
@@ -88,4 +90,8 @@ public:
 	void read_class_names(std::string, std::string);
 	//Brandon
 	Model* get_active_model();
+	HandFinder* get_active_handfinder();
+	void swap_hands();
+	Model* get_right_model();
+	Model* get_left_model();
 };

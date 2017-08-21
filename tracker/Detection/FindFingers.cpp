@@ -868,7 +868,7 @@ Matrix_MxN FindFingers::process_input() {
     size_t threshold_type = 0;
     size_t const max_binary_value = 255;
   
-    cv::Mat mask = worker->handfinder->sensor_silhouette.clone();    
+    cv::Mat mask = worker->get_active_handfinder()->sensor_silhouette.clone();    
 
     cv::GaussianBlur(mask, mask, cv::Size(2 * kernel_size + 1, 2 * kernel_size + 1), 3);
     cv::threshold(mask, mask, threshold_value, max_binary_value, threshold_type);
@@ -958,8 +958,8 @@ void FindFingers::find_thumb(const Matrix_MxN &depth) {
 
 
     // Find hand side
-    wristband_center = camera->world_to_image(worker->handfinder->wristband_center());
-    Vector2 wristband_shift = camera->world_to_image(worker->handfinder->wristband_center() + worker->handfinder->wristband_direction());
+    wristband_center = camera->world_to_image(worker->get_active_handfinder()->wristband_center());
+    Vector2 wristband_shift = camera->world_to_image(worker->get_active_handfinder()->wristband_center() + worker->get_active_handfinder()->wristband_direction());
     wristband_center = Vector2(depth.rows() - wristband_center(1), wristband_center(0));
     wristband_shift = Vector2(depth.rows() - wristband_shift(1), wristband_shift(0));
     wristband_direction = wristband_shift - wristband_center;

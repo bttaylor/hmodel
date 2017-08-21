@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 	bool benchmark = false;
 	bool playback = false;
 	int user_name = 10;
-	bool myoEnable = true;
+	bool myoEnable = false;
 
 	DataCollector collector = DataCollector();
 	myo::Hub hub("taylor.com.text");
@@ -34,7 +34,6 @@ int main(int argc, char* argv[]) {
 
 		myo->setStreamEmg(myo::Myo::streamEmgEnabled);
 		hub.addListener(&collector);
-
 	}
 
 	Handedness handedness = right_hand;
@@ -82,7 +81,7 @@ int main(int argc, char* argv[]) {
 	worker.bind_glwidget(&glwidget);
 	glwidget.show();
 
-	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color);
+	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color, myoEnable);
 	//Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
 	tracker.sensor = &sensor;
 	tracker.datastream = &datastream;

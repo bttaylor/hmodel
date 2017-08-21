@@ -52,7 +52,7 @@ public:
 	bool verbose = false;
 
 	//Brandon
-
+	bool myoEnable;
 	FACETRACKER::Tracker model;
 	cv::Mat tri;
 	cv::Mat con;
@@ -61,11 +61,12 @@ public:
 
 
 public:
-	Tracker(Worker*worker, double FPS, std::string data_path, bool real_color) : worker(worker), hub(hub), model("C:/Developer/FaceTracker-opencv2/model/face2.tracker") {
+	Tracker(Worker*worker, double FPS, std::string data_path, bool real_color, bool myoEnable) : worker(worker), hub(hub), model("C:/Developer/FaceTracker-opencv2/model/face2.tracker") {
 		setSingleShot(false);
 		setInterval((1.0 / FPS)*1000.0);
 		this->data_path = data_path;
 		this->real_color = real_color;
+		this->myoEnable = myoEnable;
 		tw_settings->tw_add_ro(current_fps, "FPS", "group=Tracker");
 		tw_settings->tw_add(initialization_enabled, "Detect ON?", "group=Tracker");
 		tw_settings->tw_add(tracking_enabled, "ArtICP ON?", "group=Tracker");
@@ -253,11 +254,12 @@ public:
 		{
 			if (mode == LIVE) {
 
-				//hub->run(1000 / 100);
+				if(myoEnable)
+					hub->run(1000 / 100);
 				//bool success = sensor->fetch_streams(worker->current_frame);		
 				//worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
 
-				bool success = sensor->concurrent_fetch_streams(worker->current_frame, *worker->handfinder, worker->model->real_color);
+				bool success = sensor->concurrent_fetch_streams(worker->current_frame, *worker->get_active_handfinder(), worker->get_active_model()->real_color);
 
 				/*if (current_frame == 1) {
 					Vector3 translation = worker->trivial_detector->exec(worker->current_frame, worker->handfinder->sensor_silhouette);
@@ -273,27 +275,27 @@ public:
 				load_recorded_frame(current_frame);
 				current_frame += speedup;
 				//current_frame += 4;
-				worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
+				worker->get_active_handfinder()->binary_classification(worker->current_frame.depth, worker->current_frame.color);
 
-				//cv::imshow("sensor_silhouette", worker->handfinder->sensor_silhouette); cv::waitKey(3);
-				worker->handfinder->num_sensor_points = 0; int count = 0;
-				for (int row = 0; row < worker->handfinder->sensor_silhouette.rows; ++row) {
-					for (int col = 0; col < worker->handfinder->sensor_silhouette.cols; ++col) {
-						if (worker->handfinder->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+				//cv::imshow("sensor_silhouette", workerget_active_handfinder()->->sensor_silhouette); cv::waitKey(3);
+				worker->get_active_handfinder()->num_sensor_points = 0; int count = 0;
+				for (int row = 0; row < worker->get_active_handfinder()->sensor_silhouette.rows; ++row) {
+					for (int col = 0; col < worker->get_active_handfinder()->sensor_silhouette.cols; ++col) {
+						if (worker->get_active_handfinder()->sensor_silhouette.at<uchar>(row, col) != 255) continue;
 						if (count % 2 == 0) {
-							worker->handfinder->sensor_indicator[worker->handfinder->num_sensor_points] = row * worker->camera->width() + col;
-							worker->handfinder->num_sensor_points++;
+							worker->get_active_handfinder()->sensor_indicator[worker->get_active_handfinder()->num_sensor_points] = row * worker->camera->width() + col;
+							worker->get_active_handfinder()->num_sensor_points++;
 						}
 					}
 				}
 
 				if (current_frame == 1) {
-					Vector3 translation = worker->trivial_detector->exec(worker->current_frame, worker->handfinder->sensor_silhouette);
-					std::vector<float> thetas = worker->model->get_theta(); thetas[9] = 0; thetas[10] = 0;
+					Vector3 translation = worker->trivial_detector->exec(worker->current_frame, worker->get_active_handfinder()->sensor_silhouette);
+					std::vector<float> thetas = worker->get_active_model()->get_theta(); thetas[9] = 0; thetas[10] = 0;
 					thetas[0] += translation[0]; thetas[1] += translation[1]; thetas[2] += translation[2];
-					worker->model->move(thetas);
-					worker->model->update_centers();
-					worker->model->compute_outline();
+					worker->get_active_model()->move(thetas);
+					worker->get_active_model()->update_centers();
+					worker->get_active_model()->compute_outline();
 				}
 
 				if (!worker->current_frame.depth.data || !worker->current_frame.color.data) return;
@@ -302,7 +304,7 @@ public:
 
 		//TICTOC_BLOCK(uploading_time, "GPU uploading")
 		{
-			frame_offset = datastream->add_frame(worker->current_frame.color.data, worker->current_frame.depth.data, worker->model->real_color.data);
+			frame_offset = datastream->add_frame(worker->current_frame.color.data, worker->current_frame.depth.data, worker->get_active_model()->real_color.data);
 			worker->current_frame.id = frame_offset;
 			//worker->current_frame.id = ++frame_offset;		
 
@@ -314,6 +316,22 @@ public:
 		//TICTOC_BLOCK(tracking_time, "Tracking")
 		{
 			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+			if (!tracking_failed && worker->handedness == both_hands) {
+				worker->swap_hands();
+				worker->get_active_handfinder()->binary_classification(worker->current_frame.depth, worker->current_frame.color);
+				worker->get_active_handfinder()->num_sensor_points = 0; int count = 0;
+				for (int row = 0; row < worker->get_active_handfinder()->sensor_silhouette.rows; ++row) {
+					for (int col = 0; col < worker->get_active_handfinder()->sensor_silhouette.cols; ++col) {
+						if (worker->get_active_handfinder()->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+						if (count % 2 == 0) {
+							worker->get_active_handfinder()->sensor_indicator[worker->get_active_handfinder()->num_sensor_points] = row * worker->camera->width() + col;
+							worker->get_active_handfinder()->num_sensor_points++;
+						}
+					}
+				}
+				tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+				worker->swap_hands();
+			}
 		}
 
 		float tracking = std::clock() - start; if (verbose) cout << "tracking = " << tracking - sensor << endl;
@@ -339,7 +357,7 @@ public:
 		//TICTOC_BLOCK(saving_time, "Saving") 
 		{
 			solutions->resize(datastream->size());
-			solutions->set(frame_offset, worker->model->get_theta());
+			solutions->set(frame_offset, worker->get_active_model()->get_theta());
 
 			if (mode == BENCHMARK) {
 				string tracking_error_filename;
@@ -368,9 +386,9 @@ public:
 				worker->rastorizer.rastorize_model(rendered_model);
 
 				float pull_error = online_performance_metrics.compute_rastorized_3D_metric(
-					rendered_model, worker->current_frame.depth, worker->handfinder->sensor_silhouette, worker->camera->inv_projection_matrix());
+					rendered_model, worker->current_frame.depth, worker->get_active_handfinder()->sensor_silhouette, worker->camera->inv_projection_matrix());
 				float push_error = online_performance_metrics.compute_rastorized_2D_metric(
-					rendered_model, worker->handfinder->sensor_silhouette, worker->E_fitting.distance_transform.idxs_image());
+					rendered_model, worker->get_active_handfinder()->sensor_silhouette, worker->E_fitting.distance_transform.idxs_image());
 
 
 				static ofstream rastorized_error_file(data_path + "hmodel_rastorized_error.txt");
@@ -407,7 +425,7 @@ public:
 
 			if (!worker->current_frame.depth.data || !worker->current_frame.color.data) return;
 
-			worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);
+			worker->get_active_handfinder()->binary_classification(worker->current_frame.depth, worker->current_frame.color);
 
 		}
 
@@ -416,8 +434,8 @@ public:
 			if (current_frame == 0) load_recorded_theta(data_path + "hmodel_solutions.txt");
 			Thetas theta = solutions->frames[current_frame / speedup];
 			for (size_t i = 0; i < num_thetas; i++) theta_std[i] = theta[i];
-			worker->model->move(theta_std);
-			worker->model->update_centers();
+			worker->get_active_model()->move(theta_std);
+			worker->get_active_model()->update_centers();
 		}
 
 		// TICTOC_BLOCK(tracking_time, "Rendering")
@@ -480,10 +498,10 @@ public:
 		filename = data_path + "Color/color-" + stringstream.str() + ".png";
 		worker->current_frame.color = cv::imread(filename);
 
-		worker->handfinder->binary_classification(worker->current_frame.depth, worker->current_frame.color);	
+		worker->get_active_handfinder()->binary_classification(worker->current_frame.depth, worker->current_frame.color);	
 
 		static cv::Mat sensor_silhouette_flipped;
-		cv::flip(worker->handfinder->sensor_silhouette, sensor_silhouette_flipped, 0 /*flip rows*/);
+		cv::flip(worker->get_active_handfinder()->sensor_silhouette, sensor_silhouette_flipped, 0 /*flip rows*/);
 
 		DistanceTransform distance_transform;
 		distance_transform.init(worker->camera->width(), worker->camera->height());
@@ -498,7 +516,7 @@ public:
 		float wband_size = 10;
 		float crop_radius = 150;
 		float crop_radius_sq = crop_radius * crop_radius;
-		Vector3 crop_center = worker->handfinder->wristband_center() + worker->handfinder->wristband_direction() * (crop_radius - wband_size);
+		Vector3 crop_center = worker->get_active_handfinder()->wristband_center() + worker->get_active_handfinder()->wristband_direction() * (crop_radius - wband_size);
 
 		for (int row = 0; row < rendered_model.rows; ++row) {
 			for (int col = 0; col < rendered_model.cols; ++col) {
@@ -512,16 +530,16 @@ public:
 		}
 
 		// Show 
-		cv::imshow("sensor_silhouette", worker->handfinder->sensor_silhouette); cv::waitKey(1);
+		cv::imshow("sensor_silhouette", worker->get_active_handfinder()->sensor_silhouette); cv::waitKey(1);
 		cv::Mat normalized_rendered_model;
 		cv::normalize(rendered_model, normalized_rendered_model, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 		cv::imshow("rendered_model", normalized_rendered_model); cv::waitKey(1);
 
 		// Compute metrics
 		float pull_error = online_performance_metrics.compute_rastorized_3D_metric(
-			rendered_model, worker->current_frame.depth, worker->handfinder->sensor_silhouette, worker->camera->inv_projection_matrix());
+			rendered_model, worker->current_frame.depth, worker->get_active_handfinder()->sensor_silhouette, worker->camera->inv_projection_matrix());
 		float push_error = online_performance_metrics.compute_rastorized_2D_metric(
-			rendered_model, worker->handfinder->sensor_silhouette, distance_transform.idxs_image());
+			rendered_model, worker->get_active_handfinder()->sensor_silhouette, distance_transform.idxs_image());
 
 		// Write metric
 		static ofstream rastorized_error_file(data_path + "hmodel_rastorized_error.txt");
@@ -570,7 +588,7 @@ public:
 		stringstream << std::setw(7) << std::setfill('0') << current_frame;
 		worker->current_frame.depth = cv::imread(data_path + "depth-" + stringstream.str() + ".png", cv::IMREAD_ANYDEPTH);
 		worker->current_frame.color = cv::imread(data_path + "color-" + stringstream.str() + ".png");
-		worker->model->real_color = cv::imread(data_path + "full_color-" + stringstream.str() + ".png");
+		worker->get_active_model()->real_color = cv::imread(data_path + "full_color-" + stringstream.str() + ".png");
 	}
 
 	void display_color_and_depth_input() {
@@ -580,7 +598,7 @@ public:
 		cv::resize(normalized_depth, normalized_depth, cv::Size(2 * normalized_depth.cols, 2 * normalized_depth.rows), cv::INTER_CUBIC);//resize image
 		cv::moveWindow("DEPTH", 592, 855); cv::imshow("DEPTH", normalized_depth);
 
-		cv::namedWindow("RGB");	cv::moveWindow("RGB", 592, 375); cv::imshow("RGB", worker->model->real_color);
+		cv::namedWindow("RGB");	cv::moveWindow("RGB", 592, 375); cv::imshow("RGB", worker->get_active_model()->real_color);
 	}
 	/*
 	void read_bayes_vectors(std::string data_path, std::string name, std::vector<std::vector<float>> & input) {

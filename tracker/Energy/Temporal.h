@@ -31,6 +31,7 @@ public:
     ~Temporal();
     void track(LinearSystem& system, DataFrame& frame);
     void update(int frame_id, const std::vector<Scalar>& Solution);
+	void set_model(Model* model);
 private:
 	void track(LinearSystem& system, int fid, bool first_order);
 	void temporal_coherence_init();
