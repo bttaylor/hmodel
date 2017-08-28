@@ -41,6 +41,8 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	model_1->update_centers();
 	model_1->compute_outline();
 
+	model_1->write_model("C:/Projects/Data/Participant0/",1);
+
 	//set active model to model_1
 	this->model = this->model_1;
 

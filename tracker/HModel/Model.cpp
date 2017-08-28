@@ -378,16 +378,25 @@ void Model::compute_rendered_indicator(const cv::Mat & sensor_silhouette, Camera
 }
 
 void Model::write_model(std::string data_path, int frame_number) {
+	vector<float> hold_theta = get_theta();
+
+	move(std::vector<float>(num_thetas, 0));
+	update_centers();
 
 	std::ofstream centers_file;
 	centers_file.open(data_path + "C-" + std::to_string(frame_number) + ".txt");
-	centers_file << centers.size() << " ";
+	centers_file << centers.size() << " " << endl;
 	for (size_t i = 0; i < centers.size(); i++) {
 		for (size_t j = 0; j < 3; j++) {
 			centers_file << centers[i][j] << " ";
 		}
+		centers_file << endl;
 	}
 	centers_file.close();
+
+
+	//Vec3d global_pos = phalanges[17].global.block(0, 3, 3, 1).cast<double>();
+	//cout << endl << global_pos[0] << " " << global_pos[1] << " " << global_pos[2] << endl << endl;
 
 	std::ofstream radii_file;
 	radii_file.open(data_path + "R-" + std::to_string(frame_number) + ".txt");
@@ -417,16 +426,19 @@ void Model::write_model(std::string data_path, int frame_number) {
 
 	std::ofstream transformations_file;
 	transformations_file.open(data_path + "I-" + std::to_string(frame_number) + ".txt");
-	transformations_file << num_phalanges << endl;
-	for (size_t i = 0; i < num_phalanges; i++) {
+	transformations_file << num_phalanges + 1 << endl;
+	for (size_t i = 0; i < num_phalanges + 1; i++) {
 		for (size_t u = 0; u < 4; u++) {
 			for (size_t v = 0; v < 4; v++) {
 				//transformations_file << phalanges[i].global(u, v) << " ";
-				transformations_file << phalanges[i].init_local(u, v) << " ";
+				transformations_file << phalanges[i].init_local(v, u) << " ";
 			}
 		}
 	}
 	transformations_file.close();
+
+	move(hold_theta);
+	update_centers();
 }
 
 void Model::load_model_from_file() {

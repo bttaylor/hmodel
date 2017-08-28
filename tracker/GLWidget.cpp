@@ -166,6 +166,9 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		cout << "set up path for saving images" << std::endl;
 		//datastream->save_as_images(data_path);
 	}
+	case Qt::Key_Q: {
+		worker->get_active_model()->write_model("C:/Projects/Data/Participant0/",0);
+	}
 	break;
 	case Qt::Key_1: {
 		cout << "uniform scaling up" << endl;
