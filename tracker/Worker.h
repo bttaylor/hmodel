@@ -94,4 +94,5 @@ public:
 	void swap_hands();
 	Model* get_right_model();
 	Model* get_left_model();
+	void set_focus();
 };

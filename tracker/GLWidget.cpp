@@ -17,15 +17,17 @@
 
 #define M_PI 3.14159265358979323846
 
-GLWidget::GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path) :
+GLWidget::GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path, DataCollector* collector, std::string store_path) :
 QGLWidget(OpenGL32Format()),
 worker(worker),
 datastream(datastream),
 solutions(solutions),
 _camera(worker->camera),
+collector(collector),
 convolution_renderer(worker, real_color, data_path) {
 	this->playback = playback;
 	this->data_path = data_path;
+	this->store_path = store_path;
 	this->resize(640 * 2, 480 * 2);
 	this->move(1250, 375);
 	convolution_renderer.window_width = this->width();
@@ -33,6 +35,9 @@ convolution_renderer(worker, real_color, data_path) {
 
 	std::cout << "Started OpenGL " << this->format().majorVersion() << "." << this->format().minorVersion() << std::endl;
 	this->installEventFilter(new AntTweakBarEventFilter(this)); ///< all actions pass through filter
+	set = 0;
+	load_prompts(set++);
+	recording = false;
 }
 
 GLWidget::~GLWidget() {
@@ -170,6 +175,49 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		worker->get_active_model()->write_model("C:/Projects/Data/Participant0/",0);
 	}
 	break;
+	case Qt::Key_Space: {
+		if (prompt_i == 0) {
+			current_prompt = get_next_prompt();
+			std::cout << "Loading prompt " << prompt_i << ": " << current_prompt << std::endl;
+			cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
+			word = cv::Scalar(255, 255, 255);
+			cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
+			cv::imshow("show_prompt", word); // prompt);
+			cv::waitKey(1);
+
+			this->activateWindow();
+		}
+		else {
+			if (!recording) {
+				std::cout << "Recording..." << std::endl;
+				if (collector->enabled) {
+					collector->clear_buffers();
+					collector->recording = true;
+				}
+				datastream->clear_stream_buffer();
+				recording = true;
+			}
+			else {
+				std::cout << "End Recording" << std::endl;
+				recording = false;
+				std::cout << "Saving images to: " << store_path + current_prompt << endl;
+				datastream->save_as_images(store_path + current_prompt);
+				if (collector->enabled) {
+					collector->recording = false;
+					collector->saveMyoData(store_path + current_prompt);
+				}
+
+				current_prompt = get_next_prompt();
+				std::cout << "Loading prompt " << prompt_i << ": " << current_prompt << std::endl;
+				cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
+				word = cv::Scalar(255, 255, 255);
+				cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
+				cv::imshow("show_prompt", word); // prompt);
+				cv::waitKey(1);
+			}
+		}
+	}
+	break;
 	case Qt::Key_1: {
 		cout << "uniform scaling up" << endl;
 		worker->get_active_model()->resize_model(1.05, 1.0, 1.0);
@@ -203,3 +251,45 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 	}
 }
 
+
+std::string GLWidget::get_next_prompt() {
+
+	std::string prompt = prompts.at(prompt_order[prompt_i++]);
+	//std::cout << "prompt is: " << prompt << " prompts has " << prompts.size() << std::endl;
+
+	if (prompt_i == 100 && set == 3)
+		if (prompt_i == 100) {
+			prompts.clear();
+			load_prompts(set++);
+		}
+
+	return prompt;
+}
+
+void GLWidget::load_prompts(int set) {
+	prompts = std::vector<std::string>();
+	ifstream fp;
+	if (set == 0) {
+		fp.open(data_path + "prompts/NamesList.txt");
+	}
+	if (set == 1) {
+		fp.open(data_path + "prompts/NounsList.txt");
+	}
+	if (set == 2) {
+		fp.open(data_path + "prompts/NonEnglishList.txt");
+	}
+	
+	std::string word;
+	int N = 100;
+	for (int i = 0; i < N; ++i) {
+		getline(fp, word);
+		prompts.push_back(word);
+	}
+	fp.close();
+
+	prompt_i = 0;
+	for (int i = 0; i < 100; i++) {
+		prompt_order[i] = i;
+	}
+	std::random_shuffle(std::begin(prompt_order), std::end(prompt_order));
+}

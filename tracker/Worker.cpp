@@ -235,3 +235,7 @@ Model* Worker::get_left_model() {
 	else 
 		return model_2;
 }
+
+void Worker::set_focus() {
+	glarea->activateWindow();
+}

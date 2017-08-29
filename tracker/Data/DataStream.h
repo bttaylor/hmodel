@@ -25,6 +25,8 @@ public:
     ~DataStream();
 public:
 	void save_as_images(std::string path);
+	//Brandon
+	void clear_stream_buffer();
 };
 
 

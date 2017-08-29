@@ -3,6 +3,7 @@
 #include "tracker/ForwardDeclarations.h"
 #include "tracker/OpenGL/KinectDataRenderer/KinectDataRenderer.h"
 #include "tracker/OpenGL/ConvolutionRenderer/ConvolutionRenderer.h"
+#include "apps/hmodel_atb/DataCollector.h"
 
 class GLWidget : public QGLWidget {
 public:
@@ -19,9 +20,19 @@ public:
 
 	std::string data_path;
 
+	//Brandon
+	std::string store_path;
+	bool recording;
+	DataCollector* collector;
+	int prompt_i;
+	int prompt_order[100];
+	int set;
+	std::string current_prompt;
+	std::vector<std::string> prompts;
+
 public:
 
-	GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path);
+	GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path, DataCollector* collector, std::string store_path);
 
 	~GLWidget();
 
@@ -54,4 +65,8 @@ private:
 	void wheelEvent(QWheelEvent * event);
 
 	void keyPressEvent(QKeyEvent *event);
+
+	//Brandon
+	std::string get_next_prompt();
+	void load_prompts(int set);
 };

@@ -56,6 +56,7 @@ public:
 	FACETRACKER::Tracker model;
 	cv::Mat tri;
 	cv::Mat con;
+	bool showFaceTrack = false;
 	//static std::vector<std::vector<float>> Bayes_mu;
 	//static std::vector<std::vector<float>> Bayes_sig;
 
@@ -74,7 +75,11 @@ public:
 
 		//Bayes_mu = std::vector<std::vector<float>>();
 		//Bayes_sig = std::vector<std::vector<float>>();
-		cvNamedWindow("Face Tracker", 1);
+
+		if (showFaceTrack) {
+			cvNamedWindow("Face Tracker", 1);
+			worker->set_focus();
+		}
 
 		tri = FACETRACKER::IO::LoadTri("C:/Developer/FaceTracker-opencv2/model/face.tri");
 		con = FACETRACKER::IO::LoadCon("C:/Developer/FaceTracker-opencv2/model/face.con");
@@ -136,7 +141,7 @@ public:
 		int64 t1, t0 = cvGetTickCount(); int fnum = 0;
 		double fps = 0;
 		char sss[256]; std::string text;
-		bool show = true;
+		//bool showFaceTrack = true;
 		std::vector<int> wSize1(1); wSize1[0] = 7;
 		std::vector<int> wSize2(3); wSize2[0] = 11; wSize2[1] = 9; wSize2[2] = 7;
 		int nIter = 5; double clamp = 3, fTol = 0.01;
@@ -162,7 +167,7 @@ public:
 			Draw(im, model._shape, con, tri, model._clm._visi[idx]);
 		}
 		else{
-			if (show){
+			if (showFaceTrack){
 				cv::Mat R(im, cvRect(0, 0, 150, 50)); 
 				R = cv::Scalar(0, 0, 255); 
 			}
@@ -177,14 +182,14 @@ public:
 			t0 = t1; fnum = 0;
 		}
 		else fnum += 1;
-		//if (show){
+		if (showFaceTrack) {
 			sprintf(sss, "%d frames/sec", (int)round(fps)); text = sss;
 			cv::putText(im, text, cv::Point(10, 20),
 				CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 255, 255));
 			//std::cout << text << " im.w: " << im.cols << " im.r: " << im.rows << std::endl;
-		//}
-		//show image and check for user input
-		imshow("Face Tracker", im);
+
+			imshow("Face Tracker", im);
+		}
 		//int c = cvWaitKey(10);
 		//if (c == 27)break; else if (char(c) == 'd')model.FrameReset();
 	}

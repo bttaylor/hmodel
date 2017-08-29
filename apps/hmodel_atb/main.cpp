@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 	int user_name = 10;
 	bool myoEnable = true;
 
-	DataCollector collector = DataCollector();
+	DataCollector collector = DataCollector(myoEnable);
 	myo::Hub hub("taylor.com.text");
 	if (myoEnable){
 		myo::Myo* myo = hub.waitForMyo(10000);
@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
 		hub.addListener(&collector);
 	}
 
-	Handedness handedness = left_hand;
-	std::string sequence_path = "C:/Projects/Data/";
+	Handedness handedness = right_hand;
+	std::string sequence_path = "C:/Projects/Data/Fingerspelling/";
 	std::string data_path = "C:/Projects/MyoFaceVersion/hmodel/data/";
 	std::string sequence_name = "Participant33";
 
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 		worker._settings.termination_max_rigid_iters = 1;
 	}
 
-	GLWidget glwidget(&worker, &datastream, &solutions, playback, false /*real_color*/, data_path);
+	GLWidget glwidget(&worker, &datastream, &solutions, playback, false /*real_color*/, data_path, &collector, sequence_path + sequence_name + "/");
 	worker.bind_glwidget(&glwidget);
 	glwidget.show();
 
