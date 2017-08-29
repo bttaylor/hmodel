@@ -68,5 +68,6 @@ private:
 
 	//Brandon
 	std::string get_next_prompt();
+	std::string get_prev_prompt();
 	void load_prompts(int set);
 };

@@ -175,6 +175,18 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		worker->get_active_model()->write_model("C:/Projects/Data/Participant0/",0);
 	}
 	break;
+	case Qt::Key_Left: {
+		current_prompt = get_prev_prompt();
+		std::cout << "Loading prompt " << prompt_i << ": " << current_prompt << std::endl;
+		cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
+		word = cv::Scalar(255, 255, 255);
+		cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
+		cv::imshow("show_prompt", word); // prompt);
+		cv::waitKey(1);
+
+		this->activateWindow();
+	}
+	break;
 	case Qt::Key_Space: {
 		if (prompt_i == 0) {
 			current_prompt = get_next_prompt();
@@ -200,11 +212,29 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 			else {
 				std::cout << "End Recording" << std::endl;
 				recording = false;
-				std::cout << "Saving images to: " << store_path + current_prompt << endl;
-				datastream->save_as_images(store_path + current_prompt);
+				//std::cout << "Saving images to: " << store_path + current_prompt << endl;
+
+				std::string save_path = store_path + current_prompt; 
+				int extension = 1;
+				std::string checkFile(save_path + "_" + std::to_string(extension) + "_" + "imageTimestamps.csv");
+				ifstream ftest(checkFile.c_str());
+				if (!ftest.fail()) {
+					//cout << "The File already exists. Need to modify..." << endl;
+					while (!ftest.fail()) {
+						extension++;
+						ftest.close();
+						checkFile = save_path + "_" + std::to_string(extension) + "_" + "imageTimestamps.csv";
+						ftest = ifstream(checkFile.c_str());
+					}
+					ftest.close();
+				}
+
+				save_path = save_path + "_" + std::to_string(extension) + "_";
+				cout << "  Saving to: " << save_path << endl;
+				datastream->save_as_images(save_path);
 				if (collector->enabled) {
 					collector->recording = false;
-					collector->saveMyoData(store_path + current_prompt);
+					collector->saveMyoData(save_path);
 				}
 
 				current_prompt = get_next_prompt();
@@ -263,6 +293,16 @@ std::string GLWidget::get_next_prompt() {
 			load_prompts(set++);
 		}
 
+	return prompt;
+}
+
+std::string GLWidget::get_prev_prompt() {
+	if (prompt_i == 1) {
+		//Already at beginning
+		return current_prompt;
+	}
+	prompt_i -= 1;
+	std::string prompt = prompts.at(prompt_order[prompt_i - 1]);
 	return prompt;
 }
 
