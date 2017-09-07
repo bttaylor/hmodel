@@ -224,11 +224,11 @@ void DataCollector::saveMyoData(std::string filepath) {
 	//myfile.open("myoEMG.csv", std::ofstream::app);
 	outfile.open(path, std::ofstream::app);
 
-	std::cout << "in Myo::saveMyoData trying path: " << path << std::endl;
+	//std::cout << "in Myo::saveMyoData trying path: " << path << std::endl;
 	//outfile << "blerp blorp";
 	//outfile.close();
 
-	std::cout << "orient_time_buff[0] " << e_buf_i << std::endl;
+//	std::cout << "orient_time_buff[0] " << e_buf_i << std::endl;
 	//std::cout << "first_EMG " << first_EMG << std::endl;
 
 	outfile << first_EMG << std::endl;

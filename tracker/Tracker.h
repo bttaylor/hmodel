@@ -52,6 +52,7 @@ public:
 	bool verbose = false;
 
 	//Brandon
+	bool record_only;
 	bool myoEnable;
 	FACETRACKER::Tracker model;
 	cv::Mat tri;
@@ -62,11 +63,12 @@ public:
 
 
 public:
-	Tracker(Worker*worker, double FPS, std::string data_path, bool real_color, bool myoEnable) : worker(worker), hub(hub), model("C:/Developer/FaceTracker-opencv2/model/face2.tracker") {
+	Tracker(Worker*worker, double FPS, std::string data_path, bool real_color, bool myoEnable, bool record_only) : worker(worker), hub(hub), model("C:/Developer/FaceTracker-opencv2/model/face2.tracker") {
 		setSingleShot(false);
 		setInterval((1.0 / FPS)*1000.0);
 		this->data_path = data_path;
 		this->real_color = real_color;
+		this->record_only = record_only;
 		this->myoEnable = myoEnable;
 		tw_settings->tw_add_ro(current_fps, "FPS", "group=Tracker");
 		tw_settings->tw_add(initialization_enabled, "Detect ON?", "group=Tracker");
@@ -126,7 +128,8 @@ public:
 private:
 	void timerEvent(QTimerEvent*) {
 		process_track();
-		process_face();
+		if(!record_only)
+			process_face();
 		//compute_initial_transformations();
 	}
 
@@ -320,32 +323,39 @@ public:
 
 		//TICTOC_BLOCK(tracking_time, "Tracking")
 		{
-			tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
-			if (!tracking_failed && worker->handedness == both_hands) {
-				worker->swap_hands();
-				worker->get_active_handfinder()->binary_classification(worker->current_frame.depth, worker->current_frame.color);
-				worker->get_active_handfinder()->num_sensor_points = 0; int count = 0;
-				for (int row = 0; row < worker->get_active_handfinder()->sensor_silhouette.rows; ++row) {
-					for (int col = 0; col < worker->get_active_handfinder()->sensor_silhouette.cols; ++col) {
-						if (worker->get_active_handfinder()->sensor_silhouette.at<uchar>(row, col) != 255) continue;
-						if (count % 2 == 0) {
-							worker->get_active_handfinder()->sensor_indicator[worker->get_active_handfinder()->num_sensor_points] = row * worker->camera->width() + col;
-							worker->get_active_handfinder()->num_sensor_points++;
+			if (this->sensor->handfinder->_wristband_found && !record_only) {
+
+				tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+				if (!tracking_failed && worker->handedness == both_hands) {
+					worker->swap_hands();
+					worker->get_active_handfinder()->binary_classification(worker->current_frame.depth, worker->current_frame.color);
+					worker->get_active_handfinder()->num_sensor_points = 0; int count = 0;
+					for (int row = 0; row < worker->get_active_handfinder()->sensor_silhouette.rows; ++row) {
+						for (int col = 0; col < worker->get_active_handfinder()->sensor_silhouette.cols; ++col) {
+							if (worker->get_active_handfinder()->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+							if (count % 2 == 0) {
+								worker->get_active_handfinder()->sensor_indicator[worker->get_active_handfinder()->num_sensor_points] = row * worker->camera->width() + col;
+								worker->get_active_handfinder()->num_sensor_points++;
+							}
 						}
 					}
+					tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
+					worker->swap_hands();
 				}
-				tracking_failed = tracking_enabled ? worker->track_till_convergence() : true;
-				worker->swap_hands();
+
 			}
 		}
 
 		float tracking = std::clock() - start; if (verbose) cout << "tracking = " << tracking - sensor << endl;
 		//TICTOC_BLOCK(reinit_time, "Reinitialization")
 		{
-			if (initialization_enabled && tracking_failed) {
-				static QianDetection detection(worker);
-				if (detection.can_reinitialize()) {
-					detection.reinitialize();
+			if (!record_only) {
+				if (initialization_enabled && tracking_failed) {
+					static QianDetection detection(worker);
+					if (detection.can_reinitialize()) {
+						//cout << "Going to run Qian Detector." << endl;
+						detection.reinitialize();
+					}
 				}
 			}
 		}

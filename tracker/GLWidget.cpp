@@ -81,7 +81,8 @@ void GLWidget::paintGL() {
 	kinect_renderer.render();
 
 	glDisable(GL_BLEND);
-	convolution_renderer.render();
+	if(show_hand_render)
+		convolution_renderer.render();
 
 	//worker->model->render_outline();
 	//DebugRenderer::instance().set_uniform("view_projection", view_projection);
@@ -167,23 +168,61 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		int hs_class = worker->classify();
 		cout << "Most likely class: " << worker->class_names[hs_class] << std::endl;
 	}
+	break;
+	case Qt::Key_H: {
+		if (show_hand_render)
+			show_hand_render = false;
+		else
+			show_hand_render = true;
+	}
+	break;
+	case Qt::Key_J: {
+		prompt_i = 99;
+	}
+	break;
 	case Qt::Key_S: {
 		cout << "set up path for saving images" << std::endl;
-		//datastream->save_as_images(data_path);
+		std::string save_path = store_path + "Calibrate";
+		
+		datastream->save_as_images(save_path);
+		if (collector->enabled) {
+			collector->recording = false;
+			collector->saveMyoData(save_path);
+		}
 	}
+	break;
 	case Qt::Key_Q: {
 		worker->get_active_model()->write_model("C:/Projects/Data/Participant0/",0);
 	}
 	break;
 	case Qt::Key_Left: {
-		current_prompt = get_prev_prompt();
-		std::cout << "Loading prompt " << prompt_i << ": " << current_prompt << std::endl;
-		cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
-		word = cv::Scalar(255, 255, 255);
-		cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
-		cv::imshow("show_prompt", word); // prompt);
-		cv::waitKey(1);
+		if (!recording) {
+			current_prompt = get_prev_prompt();
+			std::cout << "Redoing prompt " << prompt_i << ": " << current_prompt << std::endl;
+			cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
+			word = cv::Scalar(255, 255, 255);
+			cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
+			cv::imshow("show_prompt", word); // prompt);
+			cv::waitKey(1);
+		}
+		//
+		else {
+			std::cout << "Saving... ";
+			recording = false;
 
+			save_data();
+
+			std::cout << "Redoing prompt " << prompt_i << ": " << current_prompt << std::endl;
+
+			display_prompt(current_prompt);
+			/*
+			cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
+			word = cv::Scalar(255, 255, 255);
+			cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
+			cv::imshow("show_prompt", word); // prompt);
+			cv::waitKey(1);*/
+		}
+		//
 		this->activateWindow();
 	}
 	break;
@@ -201,7 +240,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		}
 		else {
 			if (!recording) {
-				std::cout << "Recording..." << std::endl;
+				std::cout << "Recording... " ;
 				if (collector->enabled) {
 					collector->clear_buffers();
 					collector->recording = true;
@@ -210,40 +249,22 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 				recording = true;
 			}
 			else {
-				std::cout << "End Recording" << std::endl;
+				std::cout << "Saving... " ;
 				recording = false;
 				//std::cout << "Saving images to: " << store_path + current_prompt << endl;
 
-				std::string save_path = store_path + current_prompt; 
-				int extension = 1;
-				std::string checkFile(save_path + "_" + std::to_string(extension) + "_" + "imageTimestamps.csv");
-				ifstream ftest(checkFile.c_str());
-				if (!ftest.fail()) {
-					//cout << "The File already exists. Need to modify..." << endl;
-					while (!ftest.fail()) {
-						extension++;
-						ftest.close();
-						checkFile = save_path + "_" + std::to_string(extension) + "_" + "imageTimestamps.csv";
-						ftest = ifstream(checkFile.c_str());
-					}
-					ftest.close();
-				}
-
-				save_path = save_path + "_" + std::to_string(extension) + "_";
-				cout << "  Saving to: " << save_path << endl;
-				datastream->save_as_images(save_path);
-				if (collector->enabled) {
-					collector->recording = false;
-					collector->saveMyoData(save_path);
-				}
+				save_data();
 
 				current_prompt = get_next_prompt();
 				std::cout << "Loading prompt " << prompt_i << ": " << current_prompt << std::endl;
+
+				display_prompt(current_prompt);
+/*
 				cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
 				word = cv::Scalar(255, 255, 255);
 				cv::putText(word, current_prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
 				cv::imshow("show_prompt", word); // prompt);
-				cv::waitKey(1);
+				cv::waitKey(1);*/
 			}
 		}
 	}
@@ -284,15 +305,18 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 
 std::string GLWidget::get_next_prompt() {
 
+	if (prompt_i == prompts.size()) {
+		load_prompts(set++);
+	}
 	std::string prompt = prompts.at(prompt_order[prompt_i++]);
-	//std::cout << "prompt is: " << prompt << " prompts has " << prompts.size() << std::endl;
 
+	/*
 	if (prompt_i == 100 && set == 3)
 		if (prompt_i == 100) {
 			prompts.clear();
 			load_prompts(set++);
 		}
-
+	*/
 	return prompt;
 }
 
@@ -310,12 +334,15 @@ void GLWidget::load_prompts(int set) {
 	prompts = std::vector<std::string>();
 	ifstream fp;
 	if (set == 0) {
+		cout << "Loading NamesList" << endl;
 		fp.open(data_path + "prompts/NamesList.txt");
 	}
 	if (set == 1) {
+		cout << endl << "Loading NounsList" << endl << endl;;
 		fp.open(data_path + "prompts/NounsList.txt");
 	}
 	if (set == 2) {
+		cout << endl << "Loading NonEnglishList" << endl << endl;
 		fp.open(data_path + "prompts/NonEnglishList.txt");
 	}
 	
@@ -332,4 +359,36 @@ void GLWidget::load_prompts(int set) {
 		prompt_order[i] = i;
 	}
 	std::random_shuffle(std::begin(prompt_order), std::end(prompt_order));
+}
+
+void GLWidget::save_data() {
+	std::string save_path = store_path + current_prompt;
+	int extension = 1;
+	std::string checkFile(save_path + "_" + std::to_string(extension) + "_" + "imageTimestamps.csv");
+	ifstream ftest(checkFile.c_str());
+	if (!ftest.fail()) { //If file exists
+		while (!ftest.fail()) { //While file exists
+			extension++;
+			ftest.close();
+			checkFile = save_path + "_" + std::to_string(extension) + "_" + "imageTimestamps.csv";
+			ftest = ifstream(checkFile.c_str());
+		}
+		ftest.close();
+	}
+
+	save_path = save_path + "_" + std::to_string(extension) + "_";
+	datastream->save_as_images(save_path);
+	if (collector->enabled) {
+		collector->recording = false;
+		collector->saveMyoData(save_path);
+	}
+}
+
+void GLWidget::display_prompt(std::string prompt) {
+
+	cv::Mat word = cv::Mat::ones(100, 500, CV_8UC3);
+	word = cv::Scalar(255, 255, 255);
+	cv::putText(word, prompt, cv::Point(50, 70), cv::FONT_HERSHEY_SIMPLEX, 2, 0);
+	cv::imshow("show_prompt", word); // prompt);
+	cv::waitKey(1);
 }

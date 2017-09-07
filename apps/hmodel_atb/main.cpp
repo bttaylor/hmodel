@@ -1,5 +1,6 @@
 #include <iostream>
 #include <QApplication>
+#include <qwindow.h>
 
 #include "tracker/Sensor/Sensor.h"
 #include "tracker/Data/Camera.h"
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
 	bool htrack = false;
 	bool test = false; //J' * J on CPU
 	bool real_color = false;
+	bool record_only = true; //Try this? pass to tracker.
 	bool save_rastorized_model = false;
 
 	bool benchmark = false;
@@ -42,7 +44,7 @@ int main(int argc, char* argv[]) {
 	Handedness handedness = right_hand;
 	std::string sequence_path = "C:/Projects/Data/Fingerspelling/";
 	std::string data_path = "C:/Projects/MyoFaceVersion/hmodel/data/";
-	std::string sequence_name = "Participant33";
+	std::string sequence_name = "P10";
 
 	Q_INIT_RESOURCE(shaders);
 	QApplication app(argc, argv);
@@ -84,9 +86,17 @@ int main(int argc, char* argv[]) {
 	worker.bind_glwidget(&glwidget);
 	glwidget.show();
 
-	Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/", real_color, myoEnable);
-	if (myoEnable)
-		tracker.hub = &hub;		
+	//Full screen
+	glwidget.windowHandle()->setScreen(app.screens()[1]);
+	glwidget.showFullScreen();
+
+	Tracker tracker(&worker, camera.FPS(), sequence_path + "Test" + "/aberdeen_1_", real_color, myoEnable, record_only);
+	//Tracker tracker(&worker, camera.FPS(), sequence_path + sequence_name + "/aberdeen_1_", real_color, myoEnable, record_only);
+	if (myoEnable) {
+		tracker.hub = &hub;
+		if (!record_only)
+			collector.recording = true;
+	}
 	//Tracker tracker(&worker, &hub, camera.FPS(), sequence_path + sequence_name + "/", real_color);
 
 	tracker.sensor = &sensor;

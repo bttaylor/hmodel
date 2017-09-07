@@ -40,7 +40,6 @@ void DataStream::save_as_images(std::string path) {
 	std::string filepath = path + "imageTimestamps.csv";
 	outfile.open(filepath, std::ofstream::app);
 
-	cout << "   Saving " << frames.size() << " images." << endl;
 	for (size_t i = 0; i < frames.size(); i++) {
 		outfile << std::to_string(frames.at(i)->timestamp.count()) << " , " << frames.at(i)->id << std::endl;
 
@@ -60,6 +59,7 @@ void DataStream::save_as_images(std::string path) {
 		//cout << filename << endl;
 	}
 	outfile.close();
+	cout << "Saved " << frames.size() << " images." << endl;
 	/*for (size_t i = 0; i < current.rows; i++) {
 		for (size_t j = 0; j < current.cols; j++) {
 			uint16_t a = current.at<uint16_t>(i, j);

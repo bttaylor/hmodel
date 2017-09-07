@@ -29,6 +29,7 @@ public:
 	int set;
 	std::string current_prompt;
 	std::vector<std::string> prompts;
+	bool show_hand_render = true;
 
 public:
 
@@ -70,4 +71,6 @@ private:
 	std::string get_next_prompt();
 	std::string get_prev_prompt();
 	void load_prompts(int set);
+	void save_data();
+	void display_prompt(std::string);
 };
