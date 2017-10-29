@@ -7,7 +7,8 @@
 using namespace std;
 
 //Brandon
-enum Handedness {left_hand, right_hand, both_hands};
+enum Handedness {left_hand, right_hand, both_hands}; 
+enum Mode { LIVE, BENCHMARK, PLAYBACK, SENSOR_ONLY };
 
 typedef float Scalar;
 typedef Scalar Real;

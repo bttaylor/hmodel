@@ -34,6 +34,17 @@ int DataStream::add_frame(const void* color_buffer, const void* depth_buffer, co
     return (frames.size()-1);
 }
 
+
+cv::Mat* DataStream::nth_depth_frame_back(int n) {
+	if (n < frames.size()) {
+		//DataFrame* frame = frames.at(frames.size() - 1 - n);
+		//cout << "datastream(50,50): " << frame->depth.at<int>(50, 50) << endl;
+		return &(frames.at(frames.size() - 1 - n)->depth);
+	}
+	else
+		return NULL;
+}
+
 void DataStream::save_as_images(std::string path) {	
 
 	std::ofstream outfile;

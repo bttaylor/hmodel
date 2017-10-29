@@ -14,7 +14,7 @@
 
 #include "tracker/TwSettings.h"
 
-HandFinder::HandFinder(Camera *camera, Handedness handedness, std::string data_path) : camera(camera){
+HandFinder::HandFinder(Camera *camera, Handedness handedness, std::string data_path, int user_num) : camera(camera){
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
 
@@ -32,7 +32,10 @@ HandFinder::HandFinder(Camera *camera, Handedness handedness, std::string data_p
 
 	 std::string path;
 	 if (handedness == right_hand || handedness == both_hands) {
-		 path = data_path + "wristbands/blue_wristband.txt";
+		 if (user_num == 6 || user_num == 11 || user_num == 13 || user_num == 14 || user_num == 15)
+			 path = data_path + "wristbands/yellow_wristband.txt";
+		 else
+			path = data_path + "wristbands/blue_wristband.txt";  //usually blue
 		 //path = local_file_path("blue_wristband.txt", true);
 	 }
 	 else {
@@ -64,7 +67,7 @@ Vector3 point_at_depth_pixel(cv::Mat& depth, int x, int y, Camera* camera) {
 
 void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {    
     _wristband_found = false;
-
+	
     TIMED_SCOPE(timer, "Worker::binary_classification");
 
     ///--- Fetch from settings
@@ -76,7 +79,7 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
     ///--- We look for wristband up to here...
     Scalar depth_farplane = camera->zFar();
 
-    Scalar crop_radius = 150;
+    Scalar crop_radius = depth_range;  //WAS 150. Cropping fingertips. 
 
     ///--- Allocated once
     static cv::Mat color_hsv;
@@ -229,3 +232,117 @@ void HandFinder::binary_classification(cv::Mat& depth, cv::Mat& color) {
     }
 }
 
+bool HandFinder::find_wristband_color(cv::Mat& depth, cv::Mat& color) {
+
+	cv::Mat color_hsv;
+	cv::Mat in_z_range;
+
+	cv::cvtColor(color, color_hsv, CV_RGB2HSV);
+	cv::inRange(depth, 150, 450 /*mm*/, /*=*/ in_z_range);
+
+	cv::Mat blue;
+	cv::Mat yellow;
+	cv::Mat green;
+	cv::Mat orange;
+	//blue
+	cv::Scalar blue_min(90, 240, 37);
+	cv::Scalar blue_max(107, 255, 255);
+	cv::inRange(color_hsv, blue_min, blue_max, /*=*/ blue);
+	cv::bitwise_and(blue, in_z_range, blue);
+	
+	//green
+	cv::Scalar green_min(50, 111, 37);
+	cv::Scalar green_max(70, 255, 255);
+	cv::inRange(color_hsv, green_min, green_max, /*=*/ green);
+	cv::bitwise_and(green, in_z_range, green);
+
+	//orange
+	cv::Scalar orange_min(2, 111, 37);
+	cv::Scalar orange_max(12, 255, 255);
+	cv::inRange(color_hsv, orange_min, orange_max, /*=*/ orange);
+	cv::bitwise_and(orange, in_z_range, orange);
+
+	//orange
+	cv::Scalar yellow_min(14, 111, 37);
+	cv::Scalar yellow_max(34, 255, 255);
+	cv::inRange(color_hsv, yellow_min, yellow_max, /*=*/ yellow);
+	cv::bitwise_and(yellow, in_z_range, yellow);
+
+	int blue_pix = 0;
+	int green_pix = 0;
+	int orange_pix = 0;
+	int yellow_pix = 0;
+	for (int row = 0; row < in_z_range.rows; ++row) {
+		for (int col = 0; col < in_z_range.cols; ++col) {
+			if (blue.at<uchar>(row, col) == 255) 
+				blue_pix++;
+			if (yellow.at<uchar>(row, col) == 255)
+				yellow_pix++;
+			if (green.at<uchar>(row, col) == 255)
+				green_pix++;
+			if (orange.at<uchar>(row, col) == 255)
+				orange_pix++;
+		}
+	}
+
+	cout << "Blue: " << blue_pix << " Green: " << green_pix << " Orange: " << orange_pix << " Yellow: " << yellow_pix << endl;
+	
+	if (!blue_pix && !green_pix && !orange_pix && !yellow_pix)
+		return false;
+
+	if (blue_pix > green_pix) {
+		if (yellow_pix > orange_pix) {
+			if (blue_pix > yellow_pix) {
+				cout << "Blue wristband" << endl;
+				_settings.hsv_min = blue_min;
+				_settings.hsv_max = blue_max;
+			}
+			else {
+				cout << "Yellow wristband" << endl;
+				_settings.hsv_min = yellow_min;
+				_settings.hsv_max = yellow_max;
+			}
+		}
+		else {
+			if (blue_pix > orange_pix) {
+				cout << "Blue wristband" << endl;
+				_settings.hsv_min = blue_min;
+				_settings.hsv_max = blue_max;
+			}
+			else {
+				cout << "Orange wristband" << endl;
+				_settings.hsv_min = orange_min;
+				_settings.hsv_max = orange_max;
+			}
+		}
+	}
+	else {
+		if (yellow_pix > orange_pix) {
+			if (green_pix > yellow_pix) {
+				cout << "Green wristband" << endl;
+				_settings.hsv_min = green_min;
+				_settings.hsv_max = green_max;
+			}
+			else {
+				cout << "Yellow wristband" << endl;
+				_settings.hsv_min = yellow_min;
+				_settings.hsv_max = yellow_max;
+			}
+		}
+		else {
+			if (green_pix > orange_pix) {
+				cout << "Green wristband" << endl;
+				_settings.hsv_min = green_min;
+				_settings.hsv_max = green_max;
+			}
+			else {
+				cout << "Orange wristband" << endl;
+				_settings.hsv_min = orange_min;
+				_settings.hsv_max = orange_max;
+			}
+		}
+	}
+	_settings.show_wband = true;
+	
+	return true;
+}

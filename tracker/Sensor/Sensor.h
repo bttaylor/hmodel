@@ -12,8 +12,10 @@ protected:
     bool initialized;
 	bool real_color;
     const Camera * camera;
+	bool color_known;
 public:
 	HandFinder * handfinder;
+	void found_color(bool found) { color_known = found; }
 
 
 public:   
@@ -58,7 +60,7 @@ private:
 class SensorRealSense : public Sensor {
 public:
 	SensorRealSense(Camera* camera);
-	SensorRealSense(Camera* camera, bool real_color, Handedness handedness, std::string data_path);
+	SensorRealSense(Camera* camera, bool real_color, Handedness handedness, std::string data_path, int user_num);
 	virtual ~SensorRealSense();
     bool spin_wait_for_data(float timeout_seconds);
 	bool fetch_streams(DataFrame& frame); 
@@ -66,6 +68,7 @@ public:
 	bool run();
 	void start(); ///< calls initialize
 	void stop();
+	bool color_found();
 private:
 	int initialize();
 };

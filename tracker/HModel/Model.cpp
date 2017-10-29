@@ -48,7 +48,7 @@ Model::~Model() {
 
 void Model::init(int user_name, std::string data_path, Handedness handedness) {
 	model_type = HMODEL;
-	this->user_name = (UserName)user_name;
+	this->user_name = user_name; // (UserName)user_name;
 	this->data_path = data_path;	
 	this->handedness = handedness;
 
@@ -383,8 +383,34 @@ void Model::write_model(std::string data_path, int frame_number) {
 	move(std::vector<float>(num_thetas, 0));
 	update_centers();
 
+	std::string c_file = data_path + "models/brandon/C";
+	std::string i_file = data_path + "models/brandon/I";
+	
+	if (handedness == right_hand) {
+		c_file += "_Right";
+		i_file += "_Right";
+	}
+	if (handedness == left_hand) {
+		c_file += "_Left";
+		i_file += "_Left";
+	}
+
+	c_file += "_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name) + ".txt";
+	i_file += "_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name) + ".txt";
+	/*
+	if (user_name < 10) {
+		c_file += "_P0" + std::to_string(user_name) + ".txt"; 
+		i_file += "_P0" + std::to_string(user_name) + ".txt";
+	}
+	else {
+		c_file += "_P" + std::to_string(user_name) + ".txt";
+		i_file += "_P" + std::to_string(user_name) + ".txt";
+	}
+	*/
+
 	std::ofstream centers_file;
-	centers_file.open(data_path + "C-" + std::to_string(frame_number) + ".txt");
+	centers_file.open(c_file);
+	//centers_file.open(data_path + "C-" + std::to_string(frame_number) + ".txt");
 	centers_file << centers.size() << " " << endl;
 	for (size_t i = 0; i < centers.size(); i++) {
 		for (size_t j = 0; j < 3; j++) {
@@ -425,7 +451,8 @@ void Model::write_model(std::string data_path, int frame_number) {
 	theta_file.close();
 
 	std::ofstream transformations_file;
-	transformations_file.open(data_path + "I-" + std::to_string(frame_number) + ".txt");
+	transformations_file.open(i_file);
+	//transformations_file.open(data_path + "I-" + std::to_string(frame_number) + ".txt");
 	transformations_file << num_phalanges + 1 << endl;
 	for (size_t i = 0; i < num_phalanges + 1; i++) {
 		for (size_t u = 0; u < 4; u++) {
@@ -444,16 +471,134 @@ void Model::write_model(std::string data_path, int frame_number) {
 void Model::load_model_from_file() {
 	blocks.clear();
 
-	std::string model_folder_path = "models/brandon/";
+	std::string model_folder_path = "models/brandon/";		//Fingerspelling
+	//std::string model_folder_path = "models/handshape/";			//For reprocessing handshape
 	read_float_vector(data_path + model_folder_path, "R", radii);
 	read_int_matrix(data_path + model_folder_path, "B", blocks);
 
+	std::string cFile = "C";
+	std::string iFilePath = data_path + model_folder_path + "I";
+	std::string cFilePath = data_path + model_folder_path + "C";
+	
 	if (handedness == right_hand) {
-		read_float_matrix(data_path + model_folder_path, "C_Right", centers);
+		cFile += "_Right_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name);
+		cFilePath += "_Right_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name) + ".txt";
+		iFilePath += "_Right_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name) + ".txt";
+	}
+	if (handedness == left_hand) {
+		cFile += "_Left_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name);
+		cFilePath += "_Left_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name) + ".txt";
+		iFilePath += "_Left_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name) + ".txt";
+	}
+
+	std::cout << "Looking for: " << cFilePath << endl;
+	ifstream ftest(cFilePath.c_str());
+
+	if (ftest.fail()) {
+		cout << "Did not find." << endl;
+		if (handedness == right_hand) {
+			read_float_matrix(data_path + model_folder_path, "C_Right", centers);
+		}
+		else if (handedness == left_hand) {
+			read_float_matrix(data_path + model_folder_path, "C_Left", centers);
+		}
+		else {
+			cout << "Model set to both_handed????? " << endl;
+		}
+	}
+	else {
+		ftest.close();
+		cout << "Found that." << endl;
+		read_float_matrix(data_path + model_folder_path, cFile, centers);
+	}
+
+	std::cout << "Looking for: " << iFilePath << endl;
+	ftest.open(iFilePath.c_str());
+
+	if (ftest.fail()) {
+		cout << "Did not find." << endl;
+		if (handedness == right_hand) {
+			iFilePath = data_path + model_folder_path + "I_Right.txt";
+		}
+		else if (handedness == left_hand) {
+			iFilePath = data_path + model_folder_path + "I_Left.txt";
+		}
+		else {
+			cout << "Model set to both_handed????? " << endl;
+		}
+	}
+	else {
+		ftest.close();
+		cout << "Found that." << endl;
+	}
+
+	FILE *fp = fopen((iFilePath).c_str(), "r");
+	int N;
+	fscanf(fp, "%d", &N);
+	for (int i = 0; i < N; ++i) {
+		phalanges[i].init_local = Mat4f::Zero(d + 1, d + 1);
+		for (size_t u = 0; u < d + 1; u++) {
+			for (size_t v = 0; v < d + 1; v++) {
+				fscanf(fp, "%f", &phalanges[i].init_local(v, u));
+			}
+		}
+	}
+	fclose(fp);
+	/*
+	if (handedness == right_hand) {
+
+		std::string userFile; 
+		std::string checkFile;
+		
+		userFile = "C_Right_P" + std::string(2 - std::to_string(user_name).length(), '0') + std::to_string(user_name);
+		/*
+		if (user_name < 10) {
+			userFile = "C_Right_P0" + std::to_string(user_name);
+			checkFile = data_path + model_folder_path + "C_Right_P0" + std::to_string(this->user_name) + ".txt";
+		}
+		else {
+			userFile = "C_Right_P" + std::to_string(user_name);
+			checkFile = data_path + model_folder_path + "C_Right_P" + std::to_string(this->user_name) + ".txt";
+		}* /
+		ifstream ftest(checkFile.c_str());
+
+		std::cout << "Looking for: " << checkFile << endl;
+		if (ftest.fail()) {
+			cout << "Did not find." << endl;
+			read_float_matrix(data_path + model_folder_path, "C_Right", centers);
+		}
+		else {
+			ftest.close();
+			cout << "Found that." << endl;
+			read_float_matrix(data_path + model_folder_path, userFile, centers);
+		}
+
 
 		// Read initial transformations
+		if (user_name < 10) {
+			userFile = "I_Right_P0" + std::to_string(user_name);
+			checkFile = data_path + model_folder_path + "I_Right_P0" + std::to_string(this->user_name) + ".txt";
+		}
+		else {
+			userFile = "I_Right_P" + std::to_string(user_name);
+			checkFile = data_path + model_folder_path + "I_Right_P" + std::to_string(this->user_name) + ".txt";
+		}
+		
+		ftest.open(checkFile.c_str());
+		//ftest(checkFile.c_str());
 
-		FILE *fp = fopen((data_path + model_folder_path + "I_Right_0717.txt").c_str(), "r");
+		std::cout << "Looking for: " << checkFile << endl;
+		if (ftest.fail()) {
+			cout << "Did not find." << endl;
+			checkFile = data_path + model_folder_path + "I_Right.txt";
+		}
+		else {
+			ftest.close();
+			cout << "Found that." << endl;
+		}
+
+		FILE *fp = fopen((checkFile).c_str(), "r");
+		//FILE *fp = fopen((data_path + model_folder_path + "I_Right.txt").c_str(), "r");
 		int N;
 		fscanf(fp, "%d", &N);
 		for (int i = 0; i < N; ++i) {
@@ -485,6 +630,7 @@ void Model::load_model_from_file() {
 		fclose(fp);
 
 	}
+	*/
 
 }
 
@@ -728,6 +874,118 @@ void Model::manually_adjust_initial_transformations() {
 	move(theta);
 	update_centers();
 	initialize_offsets();
+}
+
+void Model::adjust_hand_length(float scale) {
+	adjust_hand(true, scale);
+}
+
+void Model::adjust_hand_width(float scale) {
+	adjust_hand(false, scale);
+}
+
+void Model::adjust_hand(bool length, float scale){
+	//float scale = .9;
+	//if (increase)
+	//	scale = 1.1;
+
+	Mat3d scaling_matrix = Mat3d::Identity();
+	if (length) {
+		scaling_matrix(0, 0) = 1;
+		scaling_matrix(1, 1) = scale;
+	}
+	else {
+		scaling_matrix(0, 0) = scale;
+		scaling_matrix(1, 1) = 1;
+	}
+	scaling_matrix(2, 2) = 1;
+	if (length) {
+		//HandThumb1
+		phalanges[1].init_local.col(3).segment(1, 1) = scale * phalanges[1].init_local.col(3).segment(1, 1);
+		//HandPinky1
+		float pinky_dif = (scale - 1) * phalanges[4].init_local(1, 3); 
+		phalanges[4].init_local.col(3).segment(1, 1) = scale * phalanges[4].init_local.col(3).segment(1, 1);
+		phalanges[5].init_local(1,3) = phalanges[5].init_local(1,3) + pinky_dif;
+		phalanges[6].init_local(1,3) = phalanges[6].init_local(1,3) + pinky_dif;
+		//HandRing1
+		float ring_dif = (scale - 1) * phalanges[4].init_local(1, 3);
+		phalanges[7].init_local.col(3).segment(1, 1) = scale * phalanges[7].init_local.col(3).segment(1, 1);
+		phalanges[8].init_local(1, 3) = phalanges[8].init_local(1, 3) + ring_dif;
+		phalanges[9].init_local(1, 3) = phalanges[9].init_local(1, 3) + ring_dif;
+		//HandMiddle1
+		float middle_dif = (scale - 1) * phalanges[4].init_local(1,3);
+		phalanges[10].init_local.col(3).segment(1, 1) = scale * phalanges[10].init_local.col(3).segment(1, 1);
+		phalanges[11].init_local(1, 3) = phalanges[11].init_local(1, 3) + middle_dif;
+		phalanges[12].init_local(1, 3) = phalanges[12].init_local(1, 3) + middle_dif;
+		//HandIndex1
+		float index_dif = (scale - 1) * phalanges[4].init_local(1, 3);
+		phalanges[13].init_local.col(3).segment(1, 1) = scale * phalanges[13].init_local.col(3).segment(1, 1);
+		phalanges[14].init_local(1,3) = phalanges[14].init_local(1,3) + index_dif;
+		phalanges[15].init_local(1,3) = phalanges[15].init_local(1,3) + index_dif;
+
+	}
+	else {
+		//HandPinky1
+		phalanges[4].init_local.col(3).segment(0, 1) = scale * phalanges[4].init_local.col(3).segment(0, 1);
+		//HandRing1
+		phalanges[7].init_local.col(3).segment(0, 1) = scale * phalanges[7].init_local.col(3).segment(0, 1);
+		//HandMiddle1
+		phalanges[10].init_local.col(3).segment(0, 1) = scale * phalanges[10].init_local.col(3).segment(0, 1);
+		//HandIndex1
+		phalanges[13].init_local.col(3).segment(0, 1) = scale * phalanges[13].init_local.col(3).segment(0, 1);
+	}
+
+	for (size_t j = 0; j < phalanges[1].attachments.size(); j++) {
+		phalanges[1].offsets[j] = scaling_matrix * phalanges[1].offsets[j];
+	}
+	for (size_t j = 0; j < phalanges[4].attachments.size(); j++) {
+		phalanges[4].offsets[j] = scaling_matrix * phalanges[4].offsets[j];
+	}
+	for (size_t j = 0; j < phalanges[7].attachments.size(); j++) {
+		phalanges[7].offsets[j] = scaling_matrix * phalanges[7].offsets[j];
+	}
+	for (size_t j = 0; j < phalanges[10].attachments.size(); j++) {
+		phalanges[10].offsets[j] = scaling_matrix * phalanges[10].offsets[j];
+	}
+	for (size_t j = 0; j < phalanges[13].attachments.size(); j++) {
+		phalanges[13].offsets[j] = scaling_matrix * phalanges[13].offsets[j];
+	}
+	for (size_t j = 0; j < phalanges[0].attachments.size(); j++) {
+		phalanges[0].offsets[j] = scaling_matrix * phalanges[0].offsets[j];
+	}
+}
+
+void Model::adjust_fingers() {
+	for (int i = 0; i < 5; i++) {
+		adjust_finger(i,true);
+	}
+}
+
+void Model::adjust_finger(int finger, float scale) {
+		
+	int p_i_1 = 2 + 3 * (finger );
+	int p_i_2 = 3 + 3 * (finger );
+	Mat3d scaling_matrix = Mat3d::Identity();
+	scaling_matrix(0, 0) = 1;
+	scaling_matrix(1, 1) = scale;
+	scaling_matrix(2, 2) = 1;
+	phalanges[p_i_1].init_local.col(3).segment(0, 3) = scale * phalanges[p_i_1].init_local.col(3).segment(0, 3);
+	phalanges[p_i_2].init_local.col(3).segment(0, 3) = scale * phalanges[p_i_2].init_local.col(3).segment(0, 3);
+	for (size_t j = 0; j < phalanges[p_i_2].attachments.size(); j++) {
+		phalanges[p_i_2].offsets[j] = scaling_matrix * phalanges[p_i_2].offsets[j];
+	}
+
+}
+
+void Model::spread_fingers() {
+	//HandPinky1
+	phalanges[4].init_local.col(3).segment(0, 1) = 1.1 * phalanges[4].init_local.col(3).segment(0, 3);
+	//HandRing1
+	phalanges[7].init_local.col(3).segment(0, 1) = 1.1 * phalanges[7].init_local.col(3).segment(0, 3);
+	//HandMiddle1
+	phalanges[10].init_local.col(3).segment(0, 1) = 1.1 * phalanges[10].init_local.col(3).segment(0, 3);
+	//HandIndex1
+	phalanges[13].init_local.col(3).segment(0, 1) = 1.1 * phalanges[13].init_local.col(3).segment(0, 3);
 }
 
 void Model::resize_model(float uniform_scaling_factor, float width_scaling_factor, float thickness_scaling_factor) {

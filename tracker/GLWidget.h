@@ -4,6 +4,7 @@
 #include "tracker/OpenGL/KinectDataRenderer/KinectDataRenderer.h"
 #include "tracker/OpenGL/ConvolutionRenderer/ConvolutionRenderer.h"
 #include "apps/hmodel_atb/DataCollector.h"
+#include "tracker/HTracker.h"
 
 class GLWidget : public QGLWidget {
 public:
@@ -21,6 +22,7 @@ public:
 	std::string data_path;
 
 	//Brandon
+	HTracker* tracker;
 	std::string store_path;
 	bool recording;
 	DataCollector* collector;
@@ -30,10 +32,22 @@ public:
 	std::string current_prompt;
 	std::vector<std::string> prompts;
 	bool show_hand_render = true;
+	int joint;
+	bool color_known = false;
+	bool width_lock = false;
+	bool length_lock = false;
+	bool finger_lock[5];
+	int calibration_frame;
+	int set_num = 1;
+
+	std::vector<Vec3d> current_model;
+//	bool width_lock = false;
+//	bool length_lock = false;
+//	bool finger_lock[5];
 
 public:
 
-	GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path, DataCollector* collector, std::string store_path);
+	GLWidget(Worker* worker, DataStream * datastream, SolutionStream * solutions, bool playback, bool real_color, std::string data_path, DataCollector* collector, std::string store_path, HTracker* tracker);
 
 	~GLWidget();
 
@@ -73,4 +87,15 @@ private:
 	void load_prompts(int set);
 	void save_data();
 	void display_prompt(std::string);
+	float average_error();
+	void reset_hand_model();
+	void save_current_hand_model();
+	//void adjust_hand(bool length, float scale);
+	//void adjust_finger_lengths(float);
+	//void adjust_finger_length(int,float);
+	void dummy();
+	void adjust_hand(bool length, float scale);
+	void adjust_finger_length(int finger, float scale, int count);
+	void adjust_finger_lengths(float scale, int count);
+	void calibrate(int count);
 };

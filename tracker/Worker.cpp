@@ -18,7 +18,7 @@
 
 void Worker::updateGL() { if (glarea != NULL) glarea->updateGL(); }
 
-Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, std::string data_path, Handedness handedness) {
+Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, std::string data_path, Handedness handedness, Sensor *sensor) {
 
 	this->camera = camera;
 	this->benchmark = benchmark;
@@ -27,6 +27,7 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	this->user_name = user_name;
 	this->data_path = data_path;
 	this->handedness = handedness;
+	this->sensor = sensor;
 
 	this->model_1 = new Model();
 	if (handedness == right_hand || handedness == both_hands) {
@@ -40,13 +41,12 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	model_1->move(theta_initial);
 	model_1->update_centers();
 	model_1->compute_outline();
-
-	model_1->write_model("C:/Projects/Data/Participant0/",1);
-
+	
 	//set active model to model_1
 	this->model = this->model_1;
 
 	if (handedness == both_hands) {
+		cout << "Initializing 2nd Hand Model." << endl;
 		model_2 = new Model();  //Right
 		model_2->init(user_name, data_path, left_hand);
 		theta_initial[0] = -70; theta_initial[1] = 0;
@@ -58,10 +58,11 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	//Brandon
 	Bayes_mu = std::vector<std::vector<float>>();
 	Bayes_sig = std::vector<std::vector<float>>();
-	read_bayes_vectors(data_path, "classifiers/mu_params.txt", Bayes_mu);
-	read_bayes_vectors(data_path, "classifiers/sig_params.txt", Bayes_sig);
-	read_class_names(data_path,"classifiers/classes.txt");
-
+	read_bayes_vectors(data_path, "classifiers/test_mu_params.txt", Bayes_mu);
+	read_bayes_vectors(data_path, "classifiers/test_sig_params.txt", Bayes_sig);
+	read_class_names(data_path,"classifiers/test_classes.txt");
+	errors.reserve(30 * 60 * 5);
+	thetas.reserve(30 * 60 * 5);
 }
 
 /// @note any initialization that has to be done once GL context is active
@@ -77,9 +78,9 @@ void Worker::init_graphic_resources() {
 	///--- Initialize the energies modules
 	using namespace energy;
 	trivial_detector = new TrivialDetector(camera, &offscreen_renderer);
-	handfinder_1 = new HandFinder(camera, handedness, data_path);
+	handfinder_1 = new HandFinder(camera, handedness, data_path,user_name);
 	if (handedness == both_hands) {
-		handfinder_2 = new HandFinder(camera, left_hand, data_path);
+		handfinder_2 = new HandFinder(camera, left_hand, data_path,user_name);
 	}
 	handfinder = handfinder_1;
 
@@ -103,7 +104,7 @@ Worker::~Worker() {
 	delete model;
 }
 
-bool Worker::track_till_convergence() {
+bool Worker::track_till_convergence() {	
 	for (int i = 0; i < settings->termination_max_iters; ++i) {
 		track(i);
 		//tracking_error_optimization[i] = tracking_error;
@@ -149,11 +150,12 @@ void Worker::track(int iter) {
 
 void Worker::read_bayes_vectors(std::string data_path, std::string name, std::vector<std::vector<float>> & input) {
 	FILE *fp = fopen((data_path + name ).c_str(), "r");
-	int N = 41;
+	int N;
+	fscanf(fp, "%d", &N);
 
 	for (int i = 0; i < N; ++i) {
 		std::vector<float> theta = std::vector<float>();
-		for (int j = 0; j < 20; ++j){
+		for (int j = 0; j < 23; ++j){
 			float a;
 			fscanf(fp, "%f", &a);
 			theta.push_back(a);
@@ -166,8 +168,9 @@ void Worker::read_bayes_vectors(std::string data_path, std::string name, std::ve
 void Worker::read_class_names(std::string data_path, std::string name){
 	std::string full_path = data_path + name;
 	std::ifstream fp(full_path);
-	
-	int N = 41;
+
+	int N = 25;
+	//fscanf(fp, "%d", &N);
 
 	for (int i = 0; i < N; ++i) {
 		std::string name;
@@ -177,16 +180,32 @@ void Worker::read_class_names(std::string data_path, std::string name){
 	fp.close();
 }
 
-int Worker::classify(){
-	int N = 41;
+int Worker::classify() {
+	std::vector<float> t = model->get_theta();
+	return classify(t);
+}
+
+int Worker::classify(std::vector<float> theta) {
+	int N = 25;
 	int class_max = 0;
+	if (get_active_model()->handedness == right_hand) {
+		theta[7] *= -1;
+		theta[9] *= -1;
+		theta[13] *= -1;
+		theta[17] *= -1;
+		theta[21] *= -1;
+		theta[25] *= -1;
+	}
+
 	float max_likelihood = -999999;
 	float likelihood = 0;
+	std::vector<float> likelihoods(25, 0);
 	for (int i = 0; i < N; ++i){
 		likelihood = 0;
-		for (int j = 0; j < 20; ++j){			
-			likelihood += -.5*log(2 * M_PI * Bayes_sig[i][j]) - (model->theta[j+9] - Bayes_mu[i][j])*(model->theta[j+9] - Bayes_mu[i][j]) / (2 * Bayes_sig[i][j]);
+		for (int j = 0; j < 23; ++j){			
+			likelihood += -.5*log(2 * M_PI * Bayes_sig[i][j]) - (theta[j+9] - Bayes_mu[i][j])*(theta[j+9] - Bayes_mu[i][j]) / (2 * Bayes_sig[i][j]);
 		}
+		likelihoods[i] = likelihood;
 		if (i == 0)
 			max_likelihood = likelihood;
 		if (likelihood > max_likelihood){			
@@ -194,6 +213,13 @@ int Worker::classify(){
 			class_max = i;
 		}
 	}
+		cout << "possible classes: ";
+	for (int i = 0; i < 25; ++i) {
+		if (exp(likelihoods[i]) > .5*exp(max_likelihood)) {
+			cout << " " << class_names[i];
+		}
+	}
+		cout << endl;
 
 	return class_max;
 
@@ -238,4 +264,37 @@ Model* Worker::get_left_model() {
 
 void Worker::set_focus() {
 	glarea->activateWindow();
+}
+
+void Worker::add_tracking_data(Thetas theta) {
+	thetas.push_back(theta);
+	std::vector<float> errs;
+	errs.push_back(this->tracking_error.pull_error);
+	errs.push_back(this->tracking_error.push_error);
+	errors.push_back(errs);
+}
+
+void Worker::save_tracking_data(std::string path) {
+	cout << "Tracking Data Saving to: " << path << endl;
+	std::string tracking_error_filename = path + "hmodel_tracking_error_.txt";
+	std::string solutions_filename = path + "hmodel_solutions_.txt";
+
+	ofstream tracking_error_file(tracking_error_filename, ios_base::app);
+	ofstream solutions_file(solutions_filename, ios_base::app);
+
+	for (int i = 0; i < errors.size(); ++i) {
+		tracking_error_file << errors[i][0] << " " << errors[i][1] << endl;
+		solutions_file << thetas[i].transpose() << endl;
+	}
+
+	tracking_error_file.close();
+	solutions_file.close();
+
+	thetas.clear();
+	errors.clear();	
+}
+
+void Worker::clear_tracking_data() {
+	thetas.clear();
+	errors.clear();
 }

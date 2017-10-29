@@ -9,7 +9,7 @@ private:
     Camera*const camera=NULL;
     TrivialDetector*const trivial_detector=NULL;
 public:
-    HandFinder(Camera * camera, Handedness handedness, std::string data_path);
+    HandFinder(Camera * camera, Handedness handedness, std::string data_path, int user_num);
 	~HandFinder() {
 		delete[] sensor_indicator;
 	}
@@ -19,7 +19,7 @@ public:
     struct Settings{
         bool show_hand = false;
         bool show_wband = false;
-        float depth_range = 150;
+		float depth_range = 250; // 150;
         float wband_size = 30;
         cv::Scalar hsv_min = cv::Scalar( 94, 111,  37); ///< potentially read from file
         cv::Scalar hsv_max = cv::Scalar(120, 255, 255); ///< potentially read from file
@@ -48,4 +48,5 @@ public:
     void wristband_direction_flip(){ _wband_dir=-_wband_dir; }
 public:
 	void binary_classification(cv::Mat& depth, cv::Mat& color);
+	bool find_wristband_color(cv::Mat& depth, cv::Mat& color);
 };

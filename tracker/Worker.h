@@ -18,6 +18,7 @@
 
 #include "opencv2/core/core.hpp"       ///< cv::Mat
 #include "opencv2/highgui/highgui.hpp" ///< cv::imShow
+#include "tracker/Sensor/Sensor.h"
 
 /// @note do not construct more than one instance of this class
 class Worker {
@@ -33,7 +34,12 @@ public:
 	std::vector<std::vector<float>> Bayes_mu;
 	std::vector<std::vector<float>> Bayes_sig;
 	std::vector<std::string> class_names;
-	Handedness handedness;
+	Handedness handedness;	
+	std::vector< Thetas > thetas;
+	std::vector<std::vector<float>> errors;
+	Mode mode = LIVE;
+	//enum Mode { LIVE, BENCHMARK, PLAYBACK, SENSOR_ONLY } mode = LIVE;
+	
 
 public:
 	QGLWidget* glarea = NULL;
@@ -44,6 +50,7 @@ private:
 	Model * model;
 	Model * model_2 = NULL;
 	Model * model_1 = NULL;
+public:
 	HandFinder* handfinder_1 = NULL;
 	HandFinder* handfinder_2 = NULL;
 	HandFinder* handfinder = NULL;
@@ -75,8 +82,11 @@ public:
 	OffscreenRenderer rastorizer;
 	TrackingMonitor monitor;
 
+	//Brandon
+	Sensor *sensor;
+
 public:
-	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path, Handedness handedness);
+	Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_model, int user_name, string data_path, Handedness handedness, Sensor *sensor);
 	~Worker();
 	void init_graphic_resources(); ///< not in constructor as needs valid OpenGL context
 	void cleanup_graphic_resources();
@@ -86,6 +96,7 @@ public:
 	bool track_till_convergence();
 
 	int classify();
+	int classify(std::vector<float> t);
 	void read_bayes_vectors(std::string , std::string , std::vector<std::vector<float>>&);
 	void read_class_names(std::string, std::string);
 	//Brandon
@@ -95,4 +106,9 @@ public:
 	Model* get_right_model();
 	Model* get_left_model();
 	void set_focus();
+	bool frame_advance = true;
+	bool stop_process = false;
+	void add_tracking_data(Thetas theta);
+	void save_tracking_data(std::string path);
+	void clear_tracking_data();
 };

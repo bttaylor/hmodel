@@ -8,7 +8,8 @@
 #include <QString>
 
 class DataStream{       
-private:
+//private:
+public:  //brandon
     QList<DataFrame*> frames;
 private:
     Camera* _camera;
@@ -27,6 +28,7 @@ public:
 	void save_as_images(std::string path);
 	//Brandon
 	void clear_stream_buffer();
+	cv::Mat* nth_depth_frame_back(int);
 };
 
 

@@ -111,7 +111,8 @@ public:
 	cv::Mat real_color;
 
 	enum Type { HTRACK, HMODEL_OLD, HMODEL} model_type;
-	enum UserName { ANASTASIA, ANDRII, ANONYMOUS } user_name;
+	//enum UserName { ANASTASIA, ANDRII, ANONYMOUS } user_name;
+	int user_name;
 	std::string data_path;
 	
 	Model();
@@ -170,4 +171,13 @@ public:
 	Mat3f build_rotation_matrix(Vec3f euler_angles);
 
 	void manually_adjust_initial_transformations();
+
+	//Brandon
+	void spread_fingers();
+	void adjust_hand_width(float);
+	void adjust_hand_length(float);
+	void adjust_hand(bool, float);
+	void adjust_fingers();
+	void adjust_finger(int,float);
+	//float average_error();
 };

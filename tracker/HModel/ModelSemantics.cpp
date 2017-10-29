@@ -591,10 +591,15 @@ void ModelSemantics::setup_dofs() {
 	model->dofs[7].max = 0.2;
 	model->dofs[7].joint_id = 7;
 	model->dofs[7].phalange_id = 16;
+	if (model->handedness == right_hand) {
+		model->dofs[7].min = -.2;
+		model->dofs[7].max = 1;
+	}
+
 	// 8 - Wrist flexion
 	model->dofs[8].axis = Eigen::Vector3f(1, 0, 0);
 	model->dofs[8].type = ROTATION_AXIS;
-	model->dofs[8].min = -1;
+	model->dofs[8].min = -1.6;
 	model->dofs[8].max = 1.6;
 	model->dofs[8].joint_id = 8;
 	model->dofs[8].phalange_id = 16;
@@ -705,9 +710,7 @@ void ModelSemantics::setup_dofs() {
 	model->dofs[28].phalange_id = 6;
 
 	// Joint limits
-
-
-
+	/* Brandon disabled
 	if (model->model_type == 2 && model->user_name == 0) {
 		// thumb abduction
 		model->dofs[9].min = -0.1;	model->dofs[9].max = 1.0;
@@ -753,22 +756,28 @@ void ModelSemantics::setup_dofs() {
 		model->dofs[27].min = -0.10;	model->dofs[27].max = 2.00;
 		// pinky flexion 3
 		model->dofs[28].min = -0.10;	model->dofs[28].max = 2.00;
-	}
+	}*/
 
 	//Brandon - Removed alternate joint limits for user_name == 0. 
 	// thumb abduction
 	model->dofs[9].min = -0.1;	model->dofs[9].max = 1.0;
+	if (model->handedness == right_hand) {
+		model->dofs[9].min = -1;	model->dofs[9].max = 0.4;
+	}
 	// thumb flexion 1
 	model->dofs[10].min = -1.2;	model->dofs[10].max = 1.0;
 	// thumb flexion 2
 	model->dofs[11].min = -1.2;	model->dofs[11].max = 0.1;
 	// thumb flexion 3
-	model->dofs[12].min = -1.6;	model->dofs[12].max = 0.1;
+	model->dofs[12].min = -1.6;	model->dofs[12].max = 0.3;
 
 	// index abductions
 	model->dofs[13].min = -0.30;	model->dofs[13].max = 0.35;
+	if (model->handedness == right_hand) {
+		model->dofs[13].min = -.35;	model->dofs[13].max = .3;
+	}
 	// index flexion 1
-	model->dofs[14].min = -0.10;	model->dofs[14].max = 1.60;
+	model->dofs[14].min = -1.0;	model->dofs[14].max = 1.60;   //min was -.1 now -.3
 	// index flexion 2
 	model->dofs[15].min = -0.10;	model->dofs[15].max = 1.60;
 	// index flexion 3
@@ -776,8 +785,11 @@ void ModelSemantics::setup_dofs() {
 
 	// middle abduction
 	model->dofs[17].min = -0.30;	model->dofs[17].max = 0.40;
+	if (model->handedness == right_hand) {
+		model->dofs[17].min = -.4;	model->dofs[17].max = 0.3;
+	}
 	// middle flexion 1
-	model->dofs[18].min = -0.10;	model->dofs[18].max = 1.60;
+	model->dofs[18].min = -1.0;	model->dofs[18].max = 1.60;
 	// middle flexion 2
 	model->dofs[19].min = -0.10;	model->dofs[19].max = 1.60;
 	// middle flexion 3
@@ -785,21 +797,28 @@ void ModelSemantics::setup_dofs() {
 
 	// ring abduction
 	model->dofs[21].min = -0.10;	model->dofs[21].max = 0.30;
+	if (model->handedness == right_hand) {
+		model->dofs[21].min = -.3;	model->dofs[21].max = 0.1;
+	}
 	// ring flexion 1
-	model->dofs[22].min = -0.10;	model->dofs[22].max = 1.60;
+	model->dofs[22].min = -1.0;	model->dofs[22].max = 1.60;
 	// ring flexion 2
 	model->dofs[23].min = -0.10;	model->dofs[23].max = 1.60;
 	// ring flexion 3
 	model->dofs[24].min = -0.10;	model->dofs[24].max = 1.60;
 
 	// pinky abduction
-	model->dofs[25].min = -0.20;   model->dofs[25].max = 0.65;
+	model->dofs[25].min = -0.30;   model->dofs[25].max = 0.65;
+	if (model->handedness == right_hand) {
+		model->dofs[25].min = -0.65;	model->dofs[25].max = 0.3;
+	}
 	// pinky flexion 1
-	model->dofs[26].min = -0.10;	model->dofs[26].max = 1.60;
+	model->dofs[26].min = -1.0;	model->dofs[26].max = 1.60;
 	// pinky flexion 2
 	model->dofs[27].min = -0.10;	model->dofs[27].max = 1.60;
 	// pinky flexion 3
 	model->dofs[28].min = -0.10;	model->dofs[28].max = 1.60;
+
 }
 
 void ModelSemantics::setup_phalanges() {

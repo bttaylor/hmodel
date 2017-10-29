@@ -84,11 +84,12 @@ int i = 1;
 int sensor_frame = 0;
 int tracker_frame = 0;
 
-SensorRealSense::SensorRealSense(Camera *camera, bool real_color, Handedness handedness, std::string data_path) : Sensor(camera) {
+SensorRealSense::SensorRealSense(Camera *camera, bool real_color, Handedness handedness, std::string data_path, int user_num) : Sensor(camera) {
 	if (camera->mode() != RealSense)
 		LOG(FATAL) << "!!!FATAL: RealSense needs Intel camera mode";
-	this->handfinder = new HandFinder(camera, handedness, data_path);
+	this->handfinder = new HandFinder(camera, handedness, data_path, user_num);
 	this->real_color = real_color;
+	this->color_known = false;
 }
 
 int SensorRealSense::initialize() {
@@ -340,20 +341,22 @@ bool SensorRealSense::run() {
 		sync_color_pxc->Release();
 
 		sense_manager->ReleaseFrame();
-		handfinder->binary_classification(depth_array[BACK_BUFFER], color_array[BACK_BUFFER]);
-		num_sensor_points_array[BACK_BUFFER] = 0;
-		int count = 0;
-		for (int row = 0; row < handfinder->sensor_silhouette.rows; ++row) {
-			for (int col = 0; col < handfinder->sensor_silhouette.cols; ++col) {
-				if (handfinder->sensor_silhouette.at<uchar>(row, col) != 255) continue;
-				if (count % 2 == 0) {
-					sensor_indicator_array[BACK_BUFFER][num_sensor_points_array[BACK_BUFFER]] = row * D_width / 2 + col;
-					num_sensor_points_array[BACK_BUFFER]++;
-				} 
-				count++;
+		//if (color_known) {
+			//cout << "color_known" << endl;
+			handfinder->binary_classification(depth_array[BACK_BUFFER], color_array[BACK_BUFFER]);
+			num_sensor_points_array[BACK_BUFFER] = 0;
+			int count = 0;
+			for (int row = 0; row < handfinder->sensor_silhouette.rows; ++row) {
+				for (int col = 0; col < handfinder->sensor_silhouette.cols; ++col) {
+					if (handfinder->sensor_silhouette.at<uchar>(row, col) != 255) continue;
+					if (count % 2 == 0) {
+						sensor_indicator_array[BACK_BUFFER][num_sensor_points_array[BACK_BUFFER]] = row * D_width / 2 + col;
+						num_sensor_points_array[BACK_BUFFER]++;
+					}
+					count++;
+				}
 			}
-		}
-
+		//}
 		// Lock the mutex and swap the buffers
 		{
 			std::unique_lock<std::mutex> lock(swap_mutex);
@@ -369,10 +372,10 @@ bool SensorRealSense::run() {
 			wristband_center_buffer = handfinder->_wband_center;
 			wristband_direction_buffer = handfinder->_wband_dir;
 
-			std::copy(sensor_indicator_array[BACK_BUFFER].begin(), 
+			std::copy(sensor_indicator_array[BACK_BUFFER].begin(),
 				sensor_indicator_array[BACK_BUFFER].begin() + num_sensor_points_array[BACK_BUFFER], sensor_indicator_array[FRONT_BUFFER].begin());
 			num_sensor_points_array[FRONT_BUFFER] = num_sensor_points_array[BACK_BUFFER];
-						
+
 			tracker_frame = sensor_frame;
 			sensor_frame++;
 
@@ -380,6 +383,9 @@ bool SensorRealSense::run() {
 			lock.unlock();
 			condition.notify_one();
 		}
+		//if (!color_known) {
+		//	wristband_found_buffer = false;
+		//}
 	}
 }
 
@@ -389,5 +395,9 @@ void SensorRealSense::start() {
 }
 
 void SensorRealSense::stop() {
+}
+
+bool SensorRealSense::color_found() {
+	return color_known;
 }
 #endif
