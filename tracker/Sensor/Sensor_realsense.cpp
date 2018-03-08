@@ -87,7 +87,9 @@ int tracker_frame = 0;
 SensorRealSense::SensorRealSense(Camera *camera, bool real_color, Handedness handedness, std::string data_path, int user_num) : Sensor(camera) {
 	if (camera->mode() != RealSense)
 		LOG(FATAL) << "!!!FATAL: RealSense needs Intel camera mode";
+	cout << "SensorRealSense calling HandFinder()" << endl;
 	this->handfinder = new HandFinder(camera, handedness, data_path, user_num);
+	cout << "show_wband address: " << &(this->handfinder->settings->show_wband) << endl;
 	this->real_color = real_color;
 	this->color_known = false;
 }

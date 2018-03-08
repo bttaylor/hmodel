@@ -47,9 +47,13 @@ void TwSettings::tw_add(float& var, const char* name, const char* def){
 }
 
 void TwSettings::tw_add(bool& var, const char* name, const char* def){
+	//std::cout << "tw_add: " << name << std::endl;
     if(bar==NULL) return;
+	if (name[5] == 'w')
+		std::cout << " bar var: " << name << " address: " << &var << std::endl;
 #ifdef WITH_ANTTWEAKBAR
-    TwAddVarRW(bar, name, TW_TYPE_BOOLCPP, &var, def);
+    int err =  TwAddVarRW(bar, name, TW_TYPE_BOOLCPP, &var, def);
+	
 #endif
 }
 

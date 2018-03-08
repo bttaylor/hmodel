@@ -57,7 +57,35 @@ void DataCollector::onGyroscopeData(myo::Myo* myo, uint64_t timestamp, const myo
 		gyro_time_buffer[g_buf_i % orientBufSize] = timestamp;
 		gyro_buffer[g_buf_i % orientBufSize] = gyro;
 		++g_buf_i;
+		std::cout << "x: " << gyro[0] << " y: " << gyro[1] << " z: " << gyro[2] << std::endl;
 	}
+}
+
+std::vector<float> DataCollector::integrateRotation(){
+	std::vector<float> xyz(3);
+	float rotation_x = 0;
+	float rotation_y = 0;
+	float rotation_z = 0;
+	int current_i = g_buf_i;
+	uint64_t t_0 = gyro_time_buffer[last_query];
+	if (last_query + 1 < current_i){
+		//std::cout << "t_difs: ";
+		for (int i = 0; i < current_i - last_query - 1; i++){
+			uint64_t t_1 = gyro_time_buffer[last_query + 1 + i];
+			float t_dif = (float)(t_1 - t_0) / 1000000.0;
+			rotation_x += gyro_buffer[last_query + 1 + i][0] * t_dif;
+			rotation_y += gyro_buffer[last_query + 1 + i][1] * t_dif;
+			rotation_z += gyro_buffer[last_query + 1 + i][2] * t_dif;
+			//std::cout << t_dif << " ";
+			t_0 = t_1;
+		}
+		//std::cout << " " << last_query << " " << current_i << std::endl;
+	}
+	last_query = current_i-1;
+	xyz[0] = rotation_x;
+	xyz[1] = rotation_y;
+	xyz[2] = rotation_z;
+	return xyz;
 }
 
 // onOrientationData() is called whenever the Myo device provides its current orientation, which is represented

@@ -47,6 +47,7 @@ public:
 	uint64_t* gyro_time_buffer;
 	std::vector<myo::Myo*> knownMyos;
 	bool enabled;
+	int last_query;  //Added for integration. Need to deal w/ buffer wrapping.
 
 	DataCollector(bool);
 	~DataCollector();
@@ -67,5 +68,6 @@ public:
 	size_t identifyMyo(myo::Myo* myo);
 	void saveMyoData(std::string filepath);
 	void clear_buffers();
+	std::vector<float> integrateRotation();
 };
 

@@ -17,10 +17,10 @@
 HandFinder::HandFinder(Camera *camera, Handedness handedness, std::string data_path, int user_num) : camera(camera){
     CHECK_NOTNULL(camera);
 	sensor_indicator = new int[upper_bound_num_sensor_points];
-
+	cout << "Handfinder.settings.show_wband address: " << &settings->show_wband << endl;
 	this->handedness = handedness;
     tw_settings->tw_add(settings->show_hand, "show_hand", "group=HandFinder");
-    tw_settings->tw_add(settings->show_wband, "show_wband", "group=HandFinder");
+	//tw_settings->tw_add(settings->show_wband, "show_wband", "group=HandFinder"); 
     tw_settings->tw_add(settings->wband_size, "wband_size", "group=HandFinder");
     tw_settings->tw_add(settings->depth_range, "depth_range", "group=HandFinder");
 
@@ -268,6 +268,8 @@ bool HandFinder::find_wristband_color(cv::Mat& depth, cv::Mat& color) {
 	cv::inRange(color_hsv, yellow_min, yellow_max, /*=*/ yellow);
 	cv::bitwise_and(yellow, in_z_range, yellow);
 
+	cv::imwrite("C:/Projects/IMG.png", color_hsv);
+
 	int blue_pix = 0;
 	int green_pix = 0;
 	int orange_pix = 0;
@@ -342,7 +344,7 @@ bool HandFinder::find_wristband_color(cv::Mat& depth, cv::Mat& color) {
 			}
 		}
 	}
-	_settings.show_wband = true;
+	//_settings.show_wband = true;
 	
 	return true;
 }

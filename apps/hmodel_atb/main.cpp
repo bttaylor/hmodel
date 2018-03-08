@@ -10,6 +10,7 @@
 
 #include <myo/myo.hpp>
 #include "DataCollector.h"
+#include "IMUReceiver.h"
 //#include <vld.h>
 
 int main(int argc, char* argv[]) {
@@ -21,7 +22,14 @@ int main(int argc, char* argv[]) {
 
 	bool benchmark = false;
 	bool playback = false;
-	bool myoEnable = false;
+	bool myoEnable = true;
+
+
+	std::cout << "/n Pre IMUReceiver constructor";
+	//IMUReceiver rec;
+	//rec.HelloUDP();
+	//IMUReceiver* rec = new IMUReceiver();
+	std::cout << "/n Post IMUReceiver constructor/n";
 
 	DataCollector collector = DataCollector(myoEnable);
 	myo::Hub hub("taylor.com.text");
@@ -52,7 +60,9 @@ int main(int argc, char* argv[]) {
 	Q_INIT_RESOURCE(shaders);
 	QApplication app(argc, argv);
 
-	Camera camera(QVGA, 60);
+
+	//Camera camera(QVGA, 60);
+	Camera camera(RealSense, 60);
 	SensorRealSense sensor(&camera, real_color, handedness, data_path, user_name);
 
 	DataStream datastream(&camera);
@@ -92,6 +102,10 @@ int main(int argc, char* argv[]) {
 	worker.bind_glwidget(&glwidget);
 	glwidget.show();
 
+	//glwidget.imuReceiver = &rec;
+	//rec.setWidget(&glwidget);
+
+
 	//Full screen
 	if (record_only) {
 		glwidget.windowHandle()->setScreen(app.screens()[1]);
@@ -112,8 +126,8 @@ int main(int argc, char* argv[]) {
 	tracker.solutions = &solutions;
 
 	///--- Starts the tracking
-	//tracker.toggle_sensor(true);
-	//tracker.toggle_tracking(false);
+	tracker.toggle_sensor(true);
+	//tracker.toggle_tracking(false);  //This will start w/o tracking. Activate by finding wristband and model fitting
 	tracker.toggle_tracking(!benchmark && !playback);
 	tracker.toggle_benchmark(benchmark);
 	tracker.toggle_playback(playback);

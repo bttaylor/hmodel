@@ -12,7 +12,11 @@
 #include "tracker/Data/TextureColor8UC3.h"
 #include "tracker/Data/TextureDepth16UC1.h"
 #include "tracker/HandFinder/HandFinder.h"
+#include "apps/hmodel_atb/IMUReceiver.h"
 //#include "HTracker.h"
+
+//Bt network
+//#include <QtNetwork\qtcpsocket.h
 
 #include "tracker/OpenGL/DebugRenderer/DebugRenderer.h"
 
@@ -25,7 +29,8 @@ datastream(datastream),
 solutions(solutions),
 _camera(worker->camera),
 collector(collector),
-convolution_renderer(worker, real_color, data_path) {
+convolution_renderer(worker, real_color, data_path)
+{
 	this->playback = playback;
 	this->data_path = data_path;
 	this->store_path = store_path;
@@ -48,6 +53,25 @@ convolution_renderer(worker, real_color, data_path) {
 	for (int i = 0; i < 5; i++) {
 		finger_lock[i] = false;
 	}
+	//imuReceiver = new IMUReceiver();
+	//imuReceiver = new IMUReceiver(this);
+	//socket = new QTcpSocket(this);
+	
+	udpSocket = new QUdpSocket(this);
+	//udpSocket->connectToHost(QHostAddress("192.168.1.5"), 45000);
+	//udpSocket->bind(QHostAddress::LocalHost, 45454, QUdpSocket::ShareAddress);
+	
+	udpSocket->bind(45454, QUdpSocket::ShareAddress);
+	/*
+	if (udpSocket->bind(QHostAddress::Any, 45454, QUdpSocket::ShareAddress)){
+		std::cout << "        ***Socket binding succeedded" << std::endl;
+	}
+	else{
+		std::cout << "        ***Socket binding failed" << std::endl;
+	}
+	*/
+
+	connect(udpSocket, SIGNAL(readyRead()), this, SLOT(processPendingDatagrams()), Qt::QueuedConnection);
 }
 
 GLWidget::~GLWidget() {
@@ -74,7 +98,7 @@ void GLWidget::initializeGL() {
 	convolution_renderer.projection = _camera->view_projection_matrix();
 	convolution_renderer.init(ConvolutionRenderer::NORMAL);
 
-	show_hand_render = false;
+	show_hand_render = true; // false;
 }
 
 void GLWidget::paintGL() {
@@ -104,8 +128,30 @@ void GLWidget::paintGL() {
 	//worker->model->render_outline();
 	//DebugRenderer::instance().set_uniform("view_projection", view_projection);
 	//DebugRenderer::instance().render();
+	//cout << "Painting gl. integrated rotation: " << collector->integrateRotation() << endl;
 
-	//tw_settings->tw_draw();
+
+	std::vector<float> _thetas = this->worker->get_active_model()->get_theta();
+	this->worker->get_active_model()->move(_thetas);
+	this->worker->get_active_model()->update_centers();
+	//cout << "theta_y: " << _thetas[4];
+
+	std::vector<float> ang = collector->integrateRotation();
+	//cout << " rotate: " << ang << " degrees ";
+	//vector<float> globals(num_thetas, 0); // pose
+	//globals[5] = ang;
+	_thetas[3] = ang[1] * -3.1416 / 180.0;
+	_thetas[4] = ang[0] * -3.1416 / 180.0;
+	_thetas[5] = ang[2] * -3.1416 / 180.0;
+	this->worker->get_active_model()->move(_thetas);
+	this->worker->get_active_model()->update_centers();
+
+	_thetas = this->worker->get_active_model()->get_theta();
+	//cout << " new theta_z: " << _thetas[4] << endl;
+
+
+
+	tw_settings->tw_draw();
 }
 
 void GLWidget::process_mouse_movement(GLfloat cursor_x, GLfloat cursor_y) {
@@ -251,11 +297,11 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 					break;
 	case Qt::Key_X: {
 		cout << "Checking Hand Width" << endl;
-//		adjust_hand(false, .1);
+		//		adjust_hand(false, .1);
 		cout << "Checking Hand Length" << endl;
-//		adjust_hand(true, .1);
+		//		adjust_hand(true, .1);
 		cout << "Checking Finger Lengths" << endl;
-//		adjust_finger_lengths(.1);
+		//		adjust_finger_lengths(.1);
 
 
 		//worker->get_active_model()->adjust_finger(1, true);
@@ -272,60 +318,30 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		//cout << "average error shorter: " << average_error() << endl;
 		//reset_hand_model();
 	}
-	break;
+					break;
 	case Qt::Key_E: {
 		save_current_hand_model();
 		cout << "average error: " << average_error() << endl;
 	}
-	break;
+					break;
 	case Qt::Key_H: {
 		if (show_hand_render)
 			show_hand_render = false;
 		else
 			show_hand_render = true;
 	}
-	break;
-	case Qt::Key_U:{
-		calibration_frame = worker->current_frame.id;
-		show_hand_render = true;
-		cout << "Frame num is: " << calibration_frame << endl;
-		dummy();
-		width_lock = false;
-		length_lock = false;
-		finger_lock[0] =false;
-		finger_lock[1] = false;
-		finger_lock[2] = false;
-		finger_lock[3] = false;
-		finger_lock[4] = false;
-		tracker->mode = LIVE;
-	}
-	 break;
-	case Qt::Key_J: {
-		bool found = worker->get_active_handfinder()->find_wristband_color(worker->current_frame.depth, worker->current_frame.color);
-		color_known = found;
-		//worker->sensor->found_color(found);
-		worker->sensor->handfinder->_settings.hsv_min[0] = worker->get_active_handfinder()->settings->hsv_min[0];
-		worker->sensor->handfinder->_settings.hsv_min[1] = worker->get_active_handfinder()->settings->hsv_min[1];
-		worker->sensor->handfinder->_settings.hsv_min[2] = worker->get_active_handfinder()->settings->hsv_min[2];
-		worker->sensor->handfinder->_settings.hsv_max[0] = worker->get_active_handfinder()->settings->hsv_max[0];
-		worker->sensor->handfinder->_settings.hsv_max[1] = worker->get_active_handfinder()->settings->hsv_max[1];
-		worker->sensor->handfinder->_settings.hsv_max[2] = worker->get_active_handfinder()->settings->hsv_max[2];
-		worker->sensor->handfinder->_settings.show_wband = true;
-		cout << worker->get_active_handfinder()->settings->hsv_max[0] << " " << worker->get_active_handfinder()->settings->hsv_max[1] << " " << worker->get_active_handfinder()->settings->hsv_max[2] << endl;
-		//tracker->toggle_tracking(true);
-	}
-	break;
+					break;
 	case Qt::Key_S: {
 		cout << "set up path for saving images" << std::endl;
 		std::string save_path = store_path + "Calibrate";
-		
+
 		datastream->save_as_images(save_path);
 		if (collector->enabled) {
 			collector->recording = false;
 			collector->saveMyoData(save_path);
 		}
 	}
-	break;
+					break;
 	case Qt::Key_Q: {
 		if (worker->user_name < 10) {
 
@@ -334,7 +350,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		//worker->data_path + "models/brandon/" + ;
 		//worker->get_active_model()->write_model("C:/Projects/Data/Participant0/",0);
 	}
-	break;
+					break;
 	case Qt::Key_Left: {
 		if (!recording) {
 			current_prompt = get_prev_prompt();
@@ -356,7 +372,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		}
 		this->activateWindow();
 	}
-	break;
+					   break;
 	case Qt::Key_Space: {
 		if (prompt_i == 0) {
 			current_prompt = get_next_prompt();
@@ -368,7 +384,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 		}
 		else {
 			if (!recording) {
-				std::cout << "Recording... " ;
+				std::cout << "Recording... ";
 				if (collector->enabled) {
 					collector->clear_buffers();
 					collector->recording = true;
@@ -378,7 +394,7 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 				recording = true;
 			}
 			else {
-				std::cout << "Saving... " ;
+				std::cout << "Saving... ";
 				recording = false;
 
 				save_data();
@@ -390,44 +406,94 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
 			}
 		}
 	}
-	break;
+						break;
 	case Qt::Key_W: {
-		while (set < 4) {
-			cout << get_next_prompt() << endl;
-		}
+		//Find the Wristband
+		bool found = worker->get_active_handfinder()->find_wristband_color(worker->current_frame.depth, worker->current_frame.color);
+
+		color_known = found;
+
+		worker->sensor->handfinder->_settings.hsv_min[0] = worker->get_active_handfinder()->settings->hsv_min[0];
+		worker->sensor->handfinder->_settings.hsv_min[1] = worker->get_active_handfinder()->settings->hsv_min[1];
+		worker->sensor->handfinder->_settings.hsv_min[2] = worker->get_active_handfinder()->settings->hsv_min[2];
+		worker->sensor->handfinder->_settings.hsv_max[0] = worker->get_active_handfinder()->settings->hsv_max[0];
+		worker->sensor->handfinder->_settings.hsv_max[1] = worker->get_active_handfinder()->settings->hsv_max[1];
+		worker->sensor->handfinder->_settings.hsv_max[2] = worker->get_active_handfinder()->settings->hsv_max[2];
+
 	}
-	break;
+					break;
+	case Qt::Key_M: {
+		calibration_frame = worker->current_frame.id;
+		show_hand_render = true;
+		dummy();
+		width_lock = false;
+		length_lock = false;
+		finger_lock[0] = false;
+		finger_lock[1] = false;
+		finger_lock[2] = false;
+		finger_lock[3] = false;
+		finger_lock[4] = false;
+		tracker->mode = LIVE;
+	}
+					break;
+	case Qt::Key_R: {
+		worker->spelling = !worker->spelling;
+	}
+					break;
 	case Qt::Key_1: {
 		cout << "uniform scaling up" << endl;
 		worker->get_active_model()->resize_model(1.05, 1.0, 1.0);
 	}
-	break;
+					break;
 	case Qt::Key_2: {
 		cout << "uniform scaling down" << endl;
 		worker->get_active_model()->resize_model(0.95, 1.0, 1.0);
 	}
-	break;
+					break;
 	case Qt::Key_3: {
 		cout << "width scaling up" << endl;
 		worker->get_active_model()->resize_model(1.0, 1.05, 1.0);
 	}
-	break;
+					break;
 	case Qt::Key_4: {
 		cout << "width scaling down" << endl;
 		worker->get_active_model()->resize_model(1.0, 0.95, 1.0);
 	}
-	break;
+					break;
 	case Qt::Key_5: {
 		cout << "thickness scaling up" << endl;
 		worker->get_active_model()->resize_model(1.0, 1.0, 1.05);
 	}
-	break;
+					break;
 	case Qt::Key_6: {
 		cout << "thickness scaling down" << endl;
 		worker->get_active_model()->resize_model(1.0, 1.0, 0.95);
 	}
-	break;
+					break;
+	case Qt::Key_T:{
+
+		std::cout << "\nGonna send some UDP data" << std::endl;
+		QByteArray Data;
+		Data.append("Hello from UDP GLWidget");
+		QHostAddress addr("192.168.1.5");
+		udpSocket->writeDatagram(Data, addr, 58451);
+		QHostAddress addrMAC("192.168.1.8");
+		udpSocket->writeDatagram(Data, addrMAC, 65332);
+		//udpSocket->writeDatagram(Data, addr, 45454);
+		std::cout << "Pending data: " << udpSocket->pendingDatagramSize() << std::endl;
+		if (udpSocket->state() == QUdpSocket::ConnectedState){
+			std::cout << "socket connected" << std::endl;
+		}
+		else{
+			std::cout << "Socket not conneced" << std::endl;
+		}
+
+		//QNetworkInterface::allAddresses
+		//imuReceiver->HelloUDP();
+		//imuReceiver->check();
 	}
+				   break;
+}
 }
 
 
@@ -931,4 +997,9 @@ void GLWidget::dummy(){
 		worker->updateGL();
 		calibrate(i);
 	}
+
 }
+
+//void GLWidget::processPendingDatagrams(){
+//	std::cout << "In the processPendingDatagrams function" << endl;
+//}

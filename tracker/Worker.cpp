@@ -58,8 +58,8 @@ Worker::Worker(Camera *camera, bool test, bool benchmark, bool save_rasotrized_m
 	//Brandon
 	Bayes_mu = std::vector<std::vector<float>>();
 	Bayes_sig = std::vector<std::vector<float>>();
-	read_bayes_vectors(data_path, "classifiers/test_mu_params.txt", Bayes_mu);
-	read_bayes_vectors(data_path, "classifiers/test_sig_params.txt", Bayes_sig);
+	read_bayes_vectors(data_path, "classifiers/b_mu_params.txt", Bayes_mu);
+	read_bayes_vectors(data_path, "classifiers/b_sig_params.txt", Bayes_sig);
 	read_class_names(data_path,"classifiers/test_classes.txt");
 	errors.reserve(30 * 60 * 5);
 	thetas.reserve(30 * 60 * 5);
@@ -79,6 +79,11 @@ void Worker::init_graphic_resources() {
 	using namespace energy;
 	trivial_detector = new TrivialDetector(camera, &offscreen_renderer);
 	handfinder_1 = new HandFinder(camera, handedness, data_path,user_name);
+	//Brandon moved here.
+	cout << "worker HandFinder just initialized" << endl;
+	cout << " address passed: " << &(handfinder_1->settings->show_wband) << endl;
+	tw_settings->tw_add(handfinder_1->settings->show_wband, "show_wband", "group=HandFinder");
+	tw_settings->tw_add(sensor->handfinder->settings->show_wband, "sensor_wband", "group=HandFinder");
 	if (handedness == both_hands) {
 		handfinder_2 = new HandFinder(camera, left_hand, data_path,user_name);
 	}
@@ -182,6 +187,14 @@ void Worker::read_class_names(std::string data_path, std::string name){
 
 int Worker::classify() {
 	std::vector<float> t = model->get_theta();
+	Eigen::Matrix3f mat;
+	mat = Eigen::AngleAxisf(t[3], Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(t[4], Eigen::Vector3f::UnitY()) * Eigen::AngleAxisf(t[5], Eigen::Vector3f::UnitZ());
+	Eigen::Vector3f y_off = mat * Eigen::Vector3f::UnitY();
+	Eigen::Vector3f x_off = mat * Eigen::Vector3f::UnitX();
+	Eigen::Vector3f z_off = mat * Eigen::Vector3f::UnitZ();
+	t.push_back(acos(y_off[1]));
+	t.push_back(acos(x_off[1]));
+	t.push_back(acos(-1*z_off[1]));	
 	return classify(t);
 }
 

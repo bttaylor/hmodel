@@ -39,7 +39,7 @@ public:
 	std::vector<std::vector<float>> errors;
 	Mode mode = LIVE;
 	//enum Mode { LIVE, BENCHMARK, PLAYBACK, SENSOR_ONLY } mode = LIVE;
-	
+	bool spelling = false;
 
 public:
 	QGLWidget* glarea = NULL;
